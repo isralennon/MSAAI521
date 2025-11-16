@@ -6,7 +6,7 @@
             "name": "LIDAR project",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/max/src/main.py",
+            "program": "${workspaceFolder}/src/main.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "python": "${command:python.interpreterPath}",
