@@ -1,12 +1,14 @@
-# Build artifacts paths
 BUILD_ROOT = "build"
 
-# Datasets
-DATASETS_ROOT = f"{BUILD_ROOT}/datasets"
-RACCOON_DATASET = f"{DATASETS_ROOT}/raccoon_dataset"
-TENSORFLOW_DATASETS = f"{DATASETS_ROOT}/tensorflow_datasets"
+DATA_ROOT = f"{BUILD_ROOT}/data"
+NUSCENES_ROOT = f"{DATA_ROOT}/raw/v1.0-mini"
+NUSCENES_VERSION = "v1.0-mini"
 
-# Models
+PREPROCESSED_ROOT = f"{DATA_ROOT}/preprocessed"
+YOLO_BEV_ROOT = f"{DATA_ROOT}/yolo_bev"
+
 MODELS_ROOT = f"{BUILD_ROOT}/models"
-YOLO_MODELS = f"{MODELS_ROOT}/yolo"
+
+RUNS_ROOT = f"{BUILD_ROOT}/runs"
+RESULTS_ROOT = f"{BUILD_ROOT}/results"
 
