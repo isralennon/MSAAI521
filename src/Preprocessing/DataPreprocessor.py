@@ -179,34 +179,110 @@ class DataPreprocessor:
             # STAGE 2: Transform Annotations to YOLO Format
             # --------------------------------------------------------
             
+            # ============================================================
+            # COORDINATE FRAME TRANSFORMATION: Global → Ego → Sensor
+            # ============================================================
+            # PROBLEM: nuScenes stores data in different coordinate frames:
+            # - LiDAR point clouds: Sensor frame (LIDAR_TOP coordinate system)
+            # - Annotations (bounding boxes): Global frame (world coordinates)
+            # 
+            # SOLUTION: Transform annotations to match LiDAR's sensor frame
+            # Transformation chain: Global → Ego Vehicle → Sensor
+            # 
+            # WHY THIS IS NECESSARY:
+            # For proper BEV projection, both point cloud and annotations must be
+            # in the same coordinate system. Since we keep LiDAR in sensor frame
+            # (see PointCloudProcessor.py), we must transform annotations TO sensor frame.
+            # ============================================================
+            
             # Get ego vehicle pose for this timestamp (needed for global→ego transform)
             sample_data = self.nusc.get('sample_data', lidar_token)
             ego_pose = self.nusc.get('ego_pose', sample_data['ego_pose_token'])
             
+            # Get sensor calibration for ego→sensor transformation
+            cs_record = self.nusc.get('calibrated_sensor', sample_data['calibrated_sensor_token'])
+            
             # Process all annotations (3D bounding boxes) for this sample
             yolo_labels = []
             for ann_token in sample['anns']:
-                # Get annotation metadata (in global coordinates)
+                # Get annotation metadata (stored in global/world coordinates)
                 ann = self.nusc.get('sample_annotation', ann_token)
                 
-                # Create 3D box object from annotation (global frame)
+                # Create 3D box object from annotation (currently in global frame)
                 box = Box(
                     ann['translation'],  # [x, y, z] center in global frame
                     ann['size'],         # [width, length, height] dimensions
                     Quaternion(ann['rotation'])  # Orientation quaternion
                 )
                 
-                # Transform box from global frame to ego vehicle frame
+                # --------------------------------------------------------
+                # TRANSFORMATION STEP 1 & 2: Global Frame → Ego Vehicle Frame
+                # --------------------------------------------------------
+                # The ego vehicle frame has its origin at the center of the vehicle
+                # with X=forward, Y=left, Z=up (right-handed system)
+                
                 # Step 1: Translate by negative ego position (center on ego)
                 box.translate(-np.array(ego_pose['translation']))
                 
                 # Step 2: Rotate by inverse ego orientation (align with ego axes)
                 box.rotate(Quaternion(ego_pose['rotation']).inverse)
                 
-                # Convert 3D box (ego frame) to 2D YOLO annotation (BEV image)
+                # --------------------------------------------------------
+                # TRANSFORMATION STEP 3 & 4: Ego Frame → Sensor Frame
+                # --------------------------------------------------------
+                # CRITICAL FIX: This transformation was missing in the original code,
+                # causing misalignment between LiDAR points and bounding boxes.
+                # 
+                # The sensor frame (LIDAR_TOP) has a different origin and orientation
+                # than the ego frame, so we must apply the sensor calibration transform.
+                
+                # Step 3: Translate by negative sensor position (center on sensor)
+                box.translate(-np.array(cs_record['translation']))
+                
+                # Step 4: Rotate by inverse sensor orientation (align with sensor axes)
+                box.rotate(Quaternion(cs_record['rotation']).inverse)
+                
+                # --------------------------------------------------------
+                # AXIS-ALIGNED BOUNDING BOX COMPUTATION
+                # --------------------------------------------------------
+                # PROBLEM: Standard YOLO format only supports axis-aligned bounding boxes
+                # (no rotation angle). However, our 3D boxes are rotated in 3D space.
+                # 
+                # SOLUTION: Compute the minimum axis-aligned bounding box (AABB) that
+                # fully contains the rotated 3D box when viewed from above (BEV).
+                # 
+                # WHY THIS IS NECESSARY:
+                # - A car at 45° has a larger footprint in axis-aligned coordinates
+                # - Using original width/length would create boxes that don't fully
+                #   contain the rotated object
+                # - AABB ensures the box properly encloses the object at any angle
+                # 
+                # ALGORITHM:
+                # 1. Get all 8 corners of the rotated 3D box
+                # 2. Find min/max X and Y coordinates (top-down projection)
+                # 3. Compute new center and dimensions from these extents
+                # --------------------------------------------------------
+                
+                # Get all 8 corners of the rotated 3D box (3×8 array: x, y, z for each corner)
+                corners = box.corners()
+                
+                # For BEV (top-down view), we only need X and Y coordinates (Z is discarded)
+                # Find the min/max extents in X and Y to create the smallest axis-aligned box
+                x_min, x_max = corners[0, :].min(), corners[0, :].max()
+                y_min, y_max = corners[1, :].min(), corners[1, :].max()
+                
+                # Compute axis-aligned center (midpoint of extents)
+                # Z coordinate remains unchanged (height doesn't affect top-down projection)
+                aa_center = np.array([(x_min + x_max) / 2, (y_min + y_max) / 2, box.center[2]])
+                
+                # Compute axis-aligned dimensions (extent ranges)
+                # Width = X extent, Length = Y extent, Height = original Z dimension
+                aa_size = np.array([x_max - x_min, y_max - y_min, box.wlh[2]])
+                
+                # Convert 3D axis-aligned box (sensor frame) to 2D YOLO annotation (BEV image)
                 yolo_label = self.converter.convert_annotation(
-                    box.center,         # Box center in ego frame
-                    box.wlh,           # Box dimensions [width, length, height]
+                    aa_center,          # Axis-aligned box center in sensor frame
+                    aa_size,            # Axis-aligned box dimensions [width, length, height]
                     ann['category_name']  # Object category for class mapping
                 )
                 

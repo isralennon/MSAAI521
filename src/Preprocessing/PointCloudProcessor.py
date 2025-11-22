@@ -116,14 +116,31 @@ class PointCloudProcessor:
         # Retrieve sensor calibration (extrinsic parameters)
         cs_record = self.nusc.get('calibrated_sensor', sample_data['calibrated_sensor_token'])
         
-        # Apply rotation: sensor frame → ego frame orientation
-        # Convert quaternion to 3×3 rotation matrix and apply to all points
-        pc.rotate(Quaternion(cs_record['rotation']).rotation_matrix)
+        # ============================================================
+        # CRITICAL FIX: Keep LiDAR data in sensor frame
+        # ============================================================
+        # According to nuScenes documentation, the raw LiDAR data is already
+        # stored in the sensor (LIDAR_TOP) coordinate frame, NOT the ego vehicle frame.
+        # 
+        # REASON FOR COMMENTING OUT TRANSFORMATION:
+        # The original code incorrectly transformed LiDAR data from sensor→ego frame,
+        # which caused misalignment with annotations. Since the data is already in the
+        # correct sensor frame, we should NOT apply any transformation here.
+        # 
+        # Instead, annotations must be transformed TO the sensor frame (see DataPreprocessor.py)
+        # to match the coordinate system of the LiDAR point cloud.
+        # 
+        # TRANSFORMATION STRATEGY:
+        # - LiDAR: Keep in sensor frame (no transformation needed)
+        # - Annotations: Transform from global → ego → sensor frame
+        # - Result: Both in same coordinate system for correct BEV projection
+        # 
+        # Original transformation code (now disabled):
+        # pc.rotate(Quaternion(cs_record['rotation']).rotation_matrix)
+        # pc.translate(np.array(cs_record['translation']))
+        # ============================================================
         
-        # Apply translation: shift rotated points to ego frame origin
-        pc.translate(np.array(cs_record['translation']))
-        
-        # Return transformed point cloud (4×N: x, y, z, intensity in ego frame)
+        # Return point cloud in sensor frame (4×N: x, y, z, intensity)
         return pc.points
     
     def filter_points(self, points):
