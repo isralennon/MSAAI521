@@ -26,30 +26,30 @@ def main():
     inspector.visualize_sample_data()
     inspector.visualize_annotation()
 
-    # inspector = RawDataInspector(nusc)
+    inspector = RawDataInspector(nusc)
 
-    # sample = nusc.sample[10]
-    # lidar_token = sample['data']['LIDAR_TOP']
+    sample = nusc.sample[10]
+    lidar_token = sample['data']['LIDAR_TOP']
 
-    # pc_info = inspector.inspect_point_cloud(lidar_token)
-    # annotations = inspector.inspect_annotations(sample['token'])
-    # inspector.visualize_3d_scene(sample['token'])
+    pc_info = inspector.inspect_point_cloud(lidar_token)
+    annotations = inspector.inspect_annotations(sample['token'])
+    inspector.visualize_3d_scene(sample['token'])
 
-    # print("\n=== Inspection Point 1: Raw Data ===")
-    # print(f"\nPoint Cloud: {pc_info['num_points']} points")
-    # print(f"X: [{pc_info['x_range'][0]:.2f}, {pc_info['x_range'][1]:.2f}] m")
-    # print(f"Y: [{pc_info['y_range'][0]:.2f}, {pc_info['y_range'][1]:.2f}] m")
-    # print(f"Z: [{pc_info['z_range'][0]:.2f}, {pc_info['z_range'][1]:.2f}] m")
+    print("\n=== Inspection Point 1: Raw Data ===")
+    print(f"\nPoint Cloud: {pc_info['num_points']} points")
+    print(f"X: [{pc_info['x_range'][0]:.2f}, {pc_info['x_range'][1]:.2f}] m")
+    print(f"Y: [{pc_info['y_range'][0]:.2f}, {pc_info['y_range'][1]:.2f}] m")
+    print(f"Z: [{pc_info['z_range'][0]:.2f}, {pc_info['z_range'][1]:.2f}] m")
 
-    # print("\n=== Preprocessing Stage ===")
-    # preprocessor = DataPreprocessor(nusc)
-    # total = preprocessor.process_all_samples()
-    # print(f"Processed {total} samples")
+    print("\n=== Preprocessing Stage ===")
+    preprocessor = DataPreprocessor(nusc)
+    total = preprocessor.process_all_samples()
+    print(f"Processed {total} samples")
 
-    # print("\n=== Inspection Point 2: Preprocessed Data ===")
-    # bev_inspector = BEVInspector()
-    # bev_images, yolo_labels_list = bev_inspector.load_samples(4)
-    # bev_inspector.visualize_grid(bev_images, yolo_labels_list, num_cols=2)
+    print("\n=== Inspection Point 2: Preprocessed Data ===")
+    bev_inspector = BEVInspector()
+    bev_images, yolo_labels_list = bev_inspector.load_samples(4)
+    bev_inspector.visualize_grid(bev_images, yolo_labels_list, num_cols=2)
 
     return 0
 
