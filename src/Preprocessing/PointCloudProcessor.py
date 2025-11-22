@@ -5,7 +5,7 @@ import os
 
 
 class PointCloudProcessor:
-    def __init__(self, nusc, x_range=(-50, 50), y_range=(-50, 50), z_range=(-3, 5)):
+    def __init__(self, nusc, x_range=(-75, 75), y_range=(-75, 75), z_range=(-3, 5)):
         self.nusc = nusc
         self.x_range = x_range
         self.y_range = y_range
@@ -16,9 +16,9 @@ class PointCloudProcessor:
         pcl_path = os.path.join(self.nusc.dataroot, sample_data['filename'])
         pc = LidarPointCloud.from_file(pcl_path)
         
-        cs_record = self.nusc.get('calibrated_sensor', sample_data['calibrated_sensor_token'])
-        pc.rotate(Quaternion(cs_record['rotation']).rotation_matrix)
-        pc.translate(np.array(cs_record['translation']))
+        # LiDAR data is already in sensor frame
+        # We keep it in sensor frame for BEV (no transformation needed)
+        # Annotations will be transformed TO sensor frame to match
         
         return pc.points
     

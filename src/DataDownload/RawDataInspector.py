@@ -72,18 +72,68 @@ class RawDataInspector:
         _, boxes, _ = self.nusc.get_sample_data(lidar_token, 
                                                 box_vis_level=BoxVisibility.ANY)
 
-        for box in boxes:
+        # Color mapping to match 2D BEV visualization
+        color_map = {
+            'vehicle.car': '#00FF00',           # Green
+            'vehicle.taxi': '#00FF00',
+            'vehicle.truck': '#00FF00',         # Green (Truck/Bus category)
+            'vehicle.bus.bendy': '#00FF00',
+            'vehicle.bus.rigid': '#00FF00',
+            'vehicle.construction': '#00FF00',
+            'human.pedestrian.adult': '#FF0000',                # Red
+            'human.pedestrian.child': '#FF0000',
+            'human.pedestrian.construction_worker': '#FF0000',
+            'human.pedestrian.police_officer': '#FF0000',
+            'vehicle.bicycle': '#0000FF',       # Blue (Cyclist)
+            'vehicle.motorcycle': '#0000FF',
+            'movable_object.barrier': '#FFFF00',            # Yellow
+            'movable_object.trafficcone': '#FFA500',        # Orange
+            'movable_object.pushable_pullable': '#FF00FF',  # Magenta
+        }
+        
+        def get_color(box_name):
+            return color_map.get(box_name, '#FFFFFF')  # White for unmapped categories
+
+        print(f"\n3D Scene - Found {len(boxes)} annotations:")
+        for idx, box in enumerate(boxes):
             corners = box.corners()
+            color = get_color(box.name)
+            
+            # Draw bottom face
             for i in [0, 1, 2, 3]:
                 j = (i + 1) % 4
                 ax.plot([corners[0, i], corners[0, j]],
                         [corners[1, i], corners[1, j]],
-                        [corners[2, i], corners[2, j]], 'r-', linewidth=2)
+                        [corners[2, i], corners[2, j]], color=color, linewidth=2)
+            
+            # Draw vertical edges
+            for i in range(4):
+                ax.plot([corners[0, i], corners[0, i+4]],
+                        [corners[1, i], corners[1, i+4]],
+                        [corners[2, i], corners[2, i+4]], color=color, linewidth=2)
+            
+            # Draw top face
+            for i in [4, 5, 6, 7]:
+                j = 4 + ((i + 1) % 4)
+                ax.plot([corners[0, i], corners[0, j]],
+                        [corners[1, i], corners[1, j]],
+                        [corners[2, i], corners[2, j]], color=color, linewidth=2)
+            
+            center = box.center
+            print(f"  [{idx}] {box.name}: center=({center[0]:.2f}, {center[1]:.2f}, {center[2]:.2f}), size={box.wlh}")
 
+        # Create legend with unique categories and their colors
+        unique_names = sorted(list(set([box.name for box in boxes])))
+        legend_handles = [plt.Line2D([0], [0], color=get_color(name), linewidth=2, label=name) 
+                         for name in unique_names]
+        
         ax.set_xlabel('X (m)')
         ax.set_ylabel('Y (m)')
         ax.set_zlabel('Z (m)')
-        ax.set_title('3D LiDAR Scene with Annotations')
+        ax.set_title(f'3D LiDAR Scene with {len(boxes)} Annotations')
+        ax.legend(handles=legend_handles, loc='upper left', fontsize=8, 
+                 bbox_to_anchor=(1.05, 1), ncol=1)
+        plt.tight_layout()
         plt.show()
 
     def list_scenes(self):

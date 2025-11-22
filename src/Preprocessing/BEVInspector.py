@@ -77,11 +77,13 @@ class BEVInspector:
         else:
             axes = axes.flatten()
         
+        print(f"\n2D BEV Visualization - {num_samples} samples:")
         for i in range(num_samples):
             img = bev_images[i].copy()
             h, w = img.shape[:2]
             
-            for label in yolo_labels_list[i]:
+            print(f"\n  Sample {i}: {len(yolo_labels_list[i])} objects (image: {w}x{h})")
+            for j, label in enumerate(yolo_labels_list[i]):
                 class_id = int(label[0])
                 x_center, y_center = label[1] * w, label[2] * h
                 box_w, box_h = label[3] * w, label[4] * h
@@ -92,6 +94,10 @@ class BEVInspector:
                 y2 = int(y_center + box_h / 2)
                 
                 cv2.rectangle(img, (x1, y1), (x2, y2), self.colors[class_id], 2)
+                cv2.putText(img, self.class_names[class_id], (x1, y1-5),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.4, self.colors[class_id], 1)
+                
+                print(f"    [{j}] {self.class_names[class_id]}: norm=({label[1]:.3f}, {label[2]:.3f}, {label[3]:.3f}, {label[4]:.3f}), pixel=({int(x_center)}, {int(y_center)}, {int(box_w)}, {int(box_h)})")
             
             img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             

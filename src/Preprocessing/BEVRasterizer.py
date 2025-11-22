@@ -2,7 +2,7 @@ import numpy as np
 
 
 class BEVRasterizer:
-    def __init__(self, x_range=(-50, 50), y_range=(-50, 50), z_range=(-3, 5), resolution=0.1):
+    def __init__(self, x_range=(-75, 75), y_range=(-75, 75), z_range=(-3, 5), resolution=0.1):
         self.x_range = x_range
         self.y_range = y_range
         self.z_range = z_range
@@ -30,16 +30,28 @@ class BEVRasterizer:
         mask = density_map > 0
         intensity_map[mask] = intensity_map[mask] / density_map[mask]
         
-        height_map = np.clip((height_map - self.z_range[0]) / (self.z_range[1] - self.z_range[0]), 0, 1)
-        height_map = np.power(height_map, 0.5)
+        # Normalize with strong contrast for visibility
+        height_norm = np.clip((height_map - self.z_range[0]) / (self.z_range[1] - self.z_range[0]), 0, 1)
         
-        intensity_map = intensity_map / max(intensity_map.max(), 1e-6)
-        intensity_map = np.power(intensity_map, 0.5)
+        intensity_norm = intensity_map / max(intensity_map.max(), 1e-6)
         
         density_norm = np.log1p(density_map.astype(np.float32))
         density_norm = density_norm / max(density_norm.max(), 1e-6)
-        density_norm = np.power(density_norm, 0.3)
         
-        bev_image = np.stack([height_map, intensity_map, density_norm], axis=-1)
-        return (bev_image * 255).astype(np.uint8)
+        # Create bright rings on dark background for better contrast
+        occupied_mask = density_map > 0
+        
+        # Start with dark background
+        bev_image = np.zeros((self.height, self.width, 3), dtype=np.uint8)
+        bev_image.fill(20)  # Very dark gray/black
+        
+        # Make LiDAR points bright based on density
+        # High density = brighter (more visible rings)
+        gray_level = 100 + (density_norm * 155).astype(np.uint8)  # Range: 100 (dim) to 255 (bright)
+        
+        bev_image[occupied_mask, 0] = gray_level[occupied_mask]
+        bev_image[occupied_mask, 1] = gray_level[occupied_mask]
+        bev_image[occupied_mask, 2] = gray_level[occupied_mask]
+        
+        return bev_image
 
