@@ -12,3 +12,5 @@ MODELS_ROOT = f"{BUILD_ROOT}/models"
 RUNS_ROOT = f"{BUILD_ROOT}/runs"
 RESULTS_ROOT = f"{BUILD_ROOT}/results"
 
+VISUALIZATIONS_ROOT = f"{BUILD_ROOT}/visualizations"
+
