@@ -127,7 +127,9 @@ class DatasetConfigGenerator:
             with open(manifest_path, 'w') as f:
                 for img_path in split_data['images']:
                     # Save relative path from preprocessed root
-                    rel_path = img_path.relative_to(preprocessed_path)
+                    # Convert to absolute path first if it's relative
+                    img_path_abs = Path(img_path).resolve()
+                    rel_path = img_path_abs.relative_to(preprocessed_path)
                     f.write(f"{rel_path}\n")
             
             print(f"  Saved {split_name} manifest: {manifest_path}")
