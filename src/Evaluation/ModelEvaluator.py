@@ -56,7 +56,7 @@ class ModelEvaluator:
         self.model = YOLO(str(self.model_path))
         print("✓ Model loaded successfully")
     
-    def evaluate(self, conf_threshold=0.25, iou_threshold=0.45, img_size=1000):
+    def evaluate(self, conf_threshold=0.25, iou_threshold=0.45, img_size=1280):
         """
         Evaluate model on test set.
         
@@ -66,7 +66,7 @@ class ModelEvaluator:
         Args:
             conf_threshold: Confidence threshold for predictions (default: 0.25)
             iou_threshold: IoU threshold for NMS (default: 0.45)
-            img_size: Input image size (default: 1000)
+            img_size: Input image size (default: 1280 to match BEV resolution)
         
         Returns:
             Results object containing metrics and predictions
@@ -123,7 +123,7 @@ class ModelEvaluator:
             data=self.dataset_yaml,
             split='test',
             imgsz=img_size,
-            batch=16,
+            batch=4,
             conf=conf_threshold,
             iou=iou_threshold,
             plots=True,

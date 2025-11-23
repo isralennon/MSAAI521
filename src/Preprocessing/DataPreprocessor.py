@@ -72,14 +72,20 @@ class DataPreprocessor:
         """
         self.nusc = nusc
         
-        # Initialize preprocessing components with default parameters
-        self.pc_processor = PointCloudProcessor(nusc)
-        self.rasterizer = BEVRasterizer()
+        # Initialize preprocessing components with 1280x1280 image target
+        # Resolution calculation: 100m range / 1280 pixels = 0.078125 m/pixel
+        target_resolution = 0.078125  # Meters per pixel for 1280x1280 images
         
-        # Pass rasterizer dimensions to ensure coordinate transformation consistency
+        self.pc_processor = PointCloudProcessor(nusc)
+        self.rasterizer = BEVRasterizer(resolution=target_resolution)
+        
+        # Pass rasterizer dimensions and parameters to ensure coordinate transformation consistency
         self.converter = YOLOAnnotationConverter(
             self.rasterizer.width, 
-            self.rasterizer.height
+            self.rasterizer.height,
+            x_range=self.rasterizer.x_range,
+            y_range=self.rasterizer.y_range,
+            resolution=self.rasterizer.resolution
         )
         
         # Setup output directory structure

@@ -87,7 +87,7 @@ def main():
     stage1_results, stage2_results = trainer.train_full_pipeline(
         stage1_epochs=50,
         stage2_epochs=150,
-        batch_size=16
+        batch_size=4
     )
     
     best_model_path = Path(stage2_results.save_dir) / 'weights' / 'best.pt'
