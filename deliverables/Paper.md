@@ -4,6 +4,8 @@
 
 Intro goes here
 
+Stuff from the Santosh's project brief here
+
 # EDA
 
 Introduce dataset
