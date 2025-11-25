@@ -14,6 +14,7 @@ Key Operations:
 
 from ultralytics import YOLO
 from pathlib import Path
+from Globals import RUNS_ROOT
 
 
 class ModelEvaluator:
@@ -126,6 +127,8 @@ class ModelEvaluator:
             batch=16,
             conf=conf_threshold,
             iou=iou_threshold,
+            project=str(Path(RUNS_ROOT) / 'detect'),
+            name='val',
             plots=True,
             save_json=True,
             save_txt=True

@@ -13,6 +13,18 @@ from Evaluation.ResultsVisualizer import ResultsVisualizer
 from Evaluation.PerformanceAnalyzer import PerformanceAnalyzer
 from nuscenes.nuscenes import NuScenes
 from Globals import NUSCENES_ROOT, NUSCENES_VERSION, DATA_ROOT, PREPROCESSED_ROOT
+import torch
+
+def test_gpu():
+    if torch.cuda.is_available():
+        gpu_count = torch.cuda.device_count()
+        for i in range(gpu_count):
+            print(f"GPU {i}: {torch.cuda.get_device_name(i)}")
+        print(f"✓ GPU setup complete - {gpu_count} GPU(s) available")
+        return gpu_count
+    else:
+        print("⚠ No GPU available")
+        return 0
 
 
 def main():
@@ -101,15 +113,16 @@ def main():
     
     analyzer = PerformanceAnalyzer()
     summary = analyzer.compute_performance_summary(results)
-    
-    labels_dir = Path(PREPROCESSED_ROOT) / 'labels'
-    analyzer.analyze_class_distribution(labels_dir)
-    
+
+    # Analyze class distribution from test set labels
+    test_labels_dir = splits['test']['labels_dir']
+    analyzer.analyze_class_distribution(test_labels_dir)
+
     visualizer = ResultsVisualizer()
-    test_images_dir = Path(splits['test']['images'][0]).parent
+    test_images_dir = splits['test']['images_dir']
     visualizer.visualize_predictions(evaluator.model, test_images_dir, num_samples=10)
     visualizer.generate_performance_report(results)
-    
+
     print("\n✓ Pipeline complete")
     print(f"mAP@0.5: {summary['overall']['mAP_50']:.4f}")
     print(f"mAP@0.5:0.95: {summary['overall']['mAP_50_95']:.4f}")
