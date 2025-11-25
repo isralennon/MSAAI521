@@ -112,17 +112,19 @@ class TrainingOrchestrator:
             # Freezing
             'freeze': 10,         # Freeze first 10 layers (backbone)
             
-            # Data augmentation
+            # Data augmentation (reduced for memory)
             'degrees': 15.0,      # Rotation
             'translate': 0.1,     # Translation
             'scale': 0.5,         # Scale
             'fliplr': 0.5,        # Horizontal flip
-            'mosaic': 1.0,        # Mosaic augmentation
-            'mixup': 0.1,         # MixUp augmentation
+            'mosaic': 0.5,        # Reduced mosaic (was 1.0)
+            'mixup': 0.0,         # Disabled mixup (was 0.1)
             
-            # Hardware
+            # Hardware (OPTIMIZED FOR WSL 7.7GB RAM)
             'device': 0,          # GPU 0 (use 'cpu' for CPU training)
-            'workers': 8,         # DataLoader workers
+            'workers': 2,         # Reduced from 8 to 2 (saves ~6-8GB)
+            'cache': False,       # Don't cache images in RAM
+            'amp': True,          # Mixed precision training (saves GPU memory)
             
             # Logging and saving
             'project': str(self.runs_dir / 'detect'),
@@ -227,17 +229,19 @@ class TrainingOrchestrator:
             # Freezing
             'freeze': 0,          # Unfreeze all layers
             
-            # Data augmentation (same as Stage 1)
+            # Data augmentation (reduced for memory)
             'degrees': 15.0,
             'translate': 0.1,
             'scale': 0.5,
             'fliplr': 0.5,
-            'mosaic': 1.0,
-            'mixup': 0.1,
+            'mosaic': 0.5,        # Reduced mosaic (was 1.0)
+            'mixup': 0.0,         # Disabled mixup (was 0.1)
             
-            # Hardware
+            # Hardware (OPTIMIZED FOR WSL 7.7GB RAM)
             'device': 0,
-            'workers': 8,
+            'workers': 2,         # Reduced from 8 to 2 (saves ~6-8GB)
+            'cache': False,       # Don't cache images in RAM
+            'amp': True,          # Mixed precision training (saves GPU memory)
             
             # Logging and saving
             'project': str(self.runs_dir / 'detect'),
@@ -273,8 +277,8 @@ class TrainingOrchestrator:
         print(f"  Best weights: {results.save_dir}/weights/best.pt")
         
         return results
-    
-    def train_full_pipeline(self, stage1_epochs=50, stage2_epochs=150, batch_size=16):
+
+    def train_full_pipeline(self, stage1_epochs=50, stage2_epochs=150, batch_size=4):
         """
         Execute complete two-stage training pipeline.
         
@@ -284,7 +288,9 @@ class TrainingOrchestrator:
         Args:
             stage1_epochs: Epochs for warm-up stage (default: 50)
             stage2_epochs: Epochs for fine-tuning stage (default: 150)
-            batch_size: Batch size for both stages (default: 16)
+            batch_size: Batch size for both stages (default: 4, optimized for WSL)
+                       Note: Reduced from 16 to prevent memory crashes on WSL.
+                       Increase to 8 or 16 if you have 16GB+ RAM available.
         
         Returns:
             Tuple of (stage1_results, stage2_results)
