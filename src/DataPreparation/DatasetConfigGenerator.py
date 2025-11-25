@@ -87,17 +87,19 @@ class DatasetConfigGenerator:
         # STEP 1: Build dataset configuration dictionary
         # ============================================================
         
-        # Use absolute path to preprocessed directory
+        # YOLO requires absolute paths for manifest files
+        # Compute absolute paths relative to the output directory
+        output_path = Path(output_path).resolve()  # Resolve to absolute path first
+        manifest_dir = (output_path.parent / 'split_manifests').resolve()  # Ensure absolute
         preprocessed_path = Path(PREPROCESSED_ROOT).resolve()
         
-        # YOLO expects images and labels to be in parallel directories
-        # Since we're referencing preprocessed directory directly, we specify
-        # the images/ subdirectory for each split
+        # YOLO will use split manifest files that list which images to use for each split
+        # This ensures proper train/val/test separation and prevents data leakage
         config = {
-            'path': str(preprocessed_path),
-            'train': 'images',  # YOLO will look in path/images for train images
-            'val': 'images',    # and path/labels for train labels
-            'test': 'images',
+            'path': str(preprocessed_path),  # Absolute path to preprocessed directory
+            'train': str(manifest_dir / 'train_files.txt'),  # Absolute path to training manifest
+            'val': str(manifest_dir / 'val_files.txt'),      # Absolute path to validation manifest
+            'test': str(manifest_dir / 'test_files.txt'),    # Absolute path to test manifest
             
             # Class definitions
             'names': {i: name for i, name in enumerate(self.class_names)},
@@ -122,15 +124,14 @@ class DatasetConfigGenerator:
         manifest_dir = output_path.parent / 'split_manifests'
         manifest_dir.mkdir(exist_ok=True)
         
+        # When using text files for train/val/test, YOLO expects absolute paths in the manifest
         for split_name, split_data in splits.items():
             manifest_path = manifest_dir / f'{split_name}_files.txt'
             with open(manifest_path, 'w') as f:
                 for img_path in split_data['images']:
-                    # Save relative path from preprocessed root
-                    # Convert to absolute path first if it's relative
+                    # Write absolute path to image file
                     img_path_abs = Path(img_path).resolve()
-                    rel_path = img_path_abs.relative_to(preprocessed_path)
-                    f.write(f"{rel_path}\n")
+                    f.write(f"{img_path_abs}\n")
             
             print(f"  Saved {split_name} manifest: {manifest_path}")
         

@@ -7,10 +7,12 @@ class DataValidator:
         self.root = Path(root_path)
         self.version = version
         
+        # NUSCENES_ROOT now points directly to v1.0-trainval directory
+        # Structure: root/samples, root/version/metadata
         self.required_dirs = [
-            f'samples/LIDAR_TOP',
-            f'sweeps/LIDAR_TOP',
-            self.version
+            'samples/LIDAR_TOP',
+            'sweeps/LIDAR_TOP',
+            f'{self.version}'
         ]
         
         self.required_files = [

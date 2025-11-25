@@ -1,8 +1,8 @@
 BUILD_ROOT = "build"
 
 DATA_ROOT = f"{BUILD_ROOT}/data"
-NUSCENES_ROOT = f"{DATA_ROOT}/raw/v1.0-mini"
-NUSCENES_VERSION = "v1.0-mini"
+NUSCENES_ROOT = f"{DATA_ROOT}/raw/v1.0-trainval"
+NUSCENES_VERSION = "v1.0-trainval"
 
 PREPROCESSED_ROOT = f"{DATA_ROOT}/preprocessed"
 YOLO_BEV_ROOT = f"{DATA_ROOT}/yolo_bev"
