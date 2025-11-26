@@ -64,6 +64,3 @@ wheels/
 # VS Code
 .vscode/
 
-# Documentation examples (can be regenerated)
-examples_*.py
-INFERENCE_GUIDE.md
