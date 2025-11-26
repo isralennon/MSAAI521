@@ -91,13 +91,12 @@ class DatasetConfigGenerator:
         preprocessed_path = Path(PREPROCESSED_ROOT).resolve()
         
         # YOLO expects images and labels to be in parallel directories
-        # Since we're referencing preprocessed directory directly, we specify
-        # the images/ subdirectory for each split
+        # DataSplitter creates train/images, val/images, test/images subdirectories
         config = {
             'path': str(preprocessed_path),
-            'train': 'images',  # YOLO will look in path/images for train images
-            'val': 'images',    # and path/labels for train labels
-            'test': 'images',
+            'train': 'train/images',  # YOLO will look in path/train/images
+            'val': 'val/images',      # and path/train/labels for labels
+            'test': 'test/images',
             
             # Class definitions
             'names': {i: name for i, name in enumerate(self.class_names)},
@@ -125,10 +124,12 @@ class DatasetConfigGenerator:
         for split_name, split_data in splits.items():
             manifest_path = manifest_dir / f'{split_name}_files.txt'
             with open(manifest_path, 'w') as f:
-                for img_path in split_data['images']:
+                # Get images from the split directory
+                images_dir = split_data['images_dir']
+                for img_path in sorted(images_dir.glob('*.png')):
                     # Save relative path from preprocessed root
-                    # Convert to absolute path first if it's relative
-                    img_path_abs = Path(img_path).resolve()
+                    # Resolve to absolute path first to match preprocessed_path
+                    img_path_abs = img_path.resolve()
                     rel_path = img_path_abs.relative_to(preprocessed_path)
                     f.write(f"{rel_path}\n")
             
