@@ -178,7 +178,7 @@ class ResultsVisualizer:
             f.write("-"*80 + "\n")
             f.write("Base Model: YOLOv12s\n")
             f.write("Training Strategy: Two-stage transfer learning\n")
-            f.write("Input Resolution: 1280x1280 pixels\n")
+            f.write("Input Resolution: 1024x1024 pixels\n")
             f.write("Detection Classes: 4 (Car, Truck/Bus, Pedestrian, Cyclist)\n\n")
             
             f.write("Overall Performance:\n")

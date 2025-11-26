@@ -284,7 +284,7 @@ class TrainingOrchestrator:
         Args:
             stage1_epochs: Epochs for warm-up stage (default: 50)
             stage2_epochs: Epochs for fine-tuning stage (default: 150)
-            batch_size: Batch size for both stages (default: 4, optimized for 1280px images)
+            batch_size: Batch size for both stages (default: 4, optimized for 1024px images)
         
         Returns:
             Tuple of (stage1_results, stage2_results)
