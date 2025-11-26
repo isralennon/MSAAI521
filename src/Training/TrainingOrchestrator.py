@@ -47,7 +47,7 @@ class TrainingOrchestrator:
         self.runs_dir = Path(RUNS_ROOT)
         self.runs_dir.mkdir(parents=True, exist_ok=True)
     
-    def train_stage1_warmup(self, epochs=50, batch_size=16, img_size=1000):
+    def train_stage1_warmup(self, epochs=50, batch_size=4, img_size=1024):
         """
         Stage 1: Warm-up training with frozen backbone.
         
@@ -57,8 +57,8 @@ class TrainingOrchestrator:
         
         Args:
             epochs: Number of training epochs (default: 50)
-            batch_size: Batch size (default: 16, adjust based on GPU memory)
-            img_size: Input image size (default: 1000 to match BEV resolution)
+            batch_size: Batch size (default: 4, optimized for 1024px images)
+            img_size: Input image size (default: 1024 to match BEV resolution)
         
         Returns:
             Training results object from YOLO
@@ -156,7 +156,7 @@ class TrainingOrchestrator:
         
         return results
     
-    def train_stage2_finetune(self, stage1_weights_path, epochs=150, batch_size=16, img_size=1000):
+    def train_stage2_finetune(self, stage1_weights_path, epochs=150, batch_size=4, img_size=1024):
         """
         Stage 2: Fine-tuning with all layers trainable.
         
@@ -167,8 +167,8 @@ class TrainingOrchestrator:
         Args:
             stage1_weights_path: Path to best weights from Stage 1
             epochs: Number of training epochs (default: 150)
-            batch_size: Batch size (default: 16)
-            img_size: Input image size (default: 1000)
+            batch_size: Batch size (default: 4, optimized for 1024px images)
+            img_size: Input image size (default: 1024 to match BEV resolution)
         
         Returns:
             Training results object from YOLO
@@ -274,7 +274,7 @@ class TrainingOrchestrator:
         
         return results
     
-    def train_full_pipeline(self, stage1_epochs=50, stage2_epochs=150, batch_size=16):
+    def train_full_pipeline(self, stage1_epochs=50, stage2_epochs=150, batch_size=4):
         """
         Execute complete two-stage training pipeline.
         
@@ -284,7 +284,7 @@ class TrainingOrchestrator:
         Args:
             stage1_epochs: Epochs for warm-up stage (default: 50)
             stage2_epochs: Epochs for fine-tuning stage (default: 150)
-            batch_size: Batch size for both stages (default: 16)
+            batch_size: Batch size for both stages (default: 4, optimized for 1024px images)
         
         Returns:
             Tuple of (stage1_results, stage2_results)

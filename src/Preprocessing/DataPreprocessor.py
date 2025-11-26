@@ -72,14 +72,20 @@ class DataPreprocessor:
         """
         self.nusc = nusc
         
-        # Initialize preprocessing components with default parameters
-        self.pc_processor = PointCloudProcessor(nusc)
-        self.rasterizer = BEVRasterizer()
+        # Initialize preprocessing components with 1024x1024 image target
+        # Resolution calculation: 100m range / 1024 pixels = 0.09765625 m/pixel
+        target_resolution = 0.09765625  # Meters per pixel for 1024x1024 images
         
-        # Pass rasterizer dimensions to ensure coordinate transformation consistency
+        self.pc_processor = PointCloudProcessor(nusc)
+        self.rasterizer = BEVRasterizer(resolution=target_resolution)
+        
+        # Pass rasterizer dimensions and parameters to ensure coordinate transformation consistency
         self.converter = YOLOAnnotationConverter(
             self.rasterizer.width, 
-            self.rasterizer.height
+            self.rasterizer.height,
+            x_range=self.rasterizer.x_range,
+            y_range=self.rasterizer.y_range,
+            resolution=self.rasterizer.resolution
         )
         
         # Setup output directory structure
@@ -91,13 +97,17 @@ class DataPreprocessor:
         self.images_dir.mkdir(parents=True, exist_ok=True)
         self.labels_dir.mkdir(parents=True, exist_ok=True)
     
-    def process_all_samples(self):
+    def process_all_samples(self, force_reprocess=False):
         """
         Process all samples in the nuScenes dataset and save as YOLO BEV dataset.
         
         This is the main processing loop that iterates through every sample (timestamp)
         in the nuScenes dataset, generates a BEV image and YOLO annotations, and saves
         them to disk in a format suitable for training object detection models.
+        
+        Args:
+            force_reprocess: If True, reprocess all samples even if they already exist.
+                           If False (default), skip preprocessing if output already exists.
         
         Returns:
             int: Total number of samples processed
@@ -152,6 +162,41 @@ class DataPreprocessor:
         # Get total number of samples to process (v1.0-mini has ~400)
         total_samples = len(self.nusc.sample)
         
+        # Check if preprocessing is already complete
+        if not force_reprocess:
+            existing_images = list(self.images_dir.glob('*.png'))
+            existing_labels = list(self.labels_dir.glob('*.txt'))
+            
+            # Count how many samples actually have available LIDAR files
+            available_samples = 0
+            for sample_idx in range(total_samples):
+                sample = self.nusc.sample[sample_idx]
+                lidar_token = sample['data']['LIDAR_TOP']
+                sample_data = self.nusc.get('sample_data', lidar_token)
+                pcl_path = os.path.join(self.nusc.dataroot, sample_data['filename'])
+                if os.path.exists(pcl_path):
+                    available_samples += 1
+            
+            # Check against available samples, not total metadata samples
+            if len(existing_images) >= available_samples and len(existing_labels) >= available_samples:
+                # Verify image resolution matches current configuration
+                if existing_images:
+                    sample_img = cv2.imread(str(existing_images[0]))
+                    if sample_img is not None:
+                        img_height, img_width = sample_img.shape[:2]
+                        expected_size = self.rasterizer.width
+                        if img_height != expected_size or img_width != expected_size:
+                            print(f"⚠ Image resolution changed: existing={img_width}x{img_height}, expected={expected_size}x{expected_size}")
+                            print(f"  Reprocessing required to match new resolution")
+                        else:
+                            print(f"✓ Preprocessing already complete: {len(existing_images)} images and {len(existing_labels)} labels found")
+                            print(f"  (Available LIDAR samples: {available_samples}/{total_samples})")
+                            print(f"  Use force_reprocess=True to regenerate all files")
+                            return len(existing_images)
+            else:
+                print(f"Preprocessing needed: Found {len(existing_images)}/{available_samples} images, {len(existing_labels)}/{available_samples} labels")
+                print(f"  (Available LIDAR samples: {available_samples}/{total_samples} total in metadata)")
+        
         # ============================================================
         # Main Processing Loop: Iterate through all samples
         # ============================================================
@@ -161,6 +206,13 @@ class DataPreprocessor:
             
             # Extract LIDAR_TOP token (primary 3D sensor for BEV generation)
             lidar_token = sample['data']['LIDAR_TOP']
+            
+            # Check if the LIDAR file actually exists (Kaggle dataset may be incomplete)
+            sample_data = self.nusc.get('sample_data', lidar_token)
+            pcl_path = os.path.join(self.nusc.dataroot, sample_data['filename'])
+            if not os.path.exists(pcl_path):
+                print(f"Skipping sample {sample_idx}/{total_samples}: File not found: {sample_data['filename']}")
+                continue
             
             # --------------------------------------------------------
             # STAGE 1: Generate BEV Image from Point Cloud
