@@ -16,7 +16,7 @@ The format of the annotations is a JSON file, each annotation is a 3D bounding b
 
 The schema of the data is illustrated in Figure 1:
 
-![Figure 1: Data Schema](Resource/DataSchema.png)
+![Data Schema](Resource/DataSchema.png)
 
 ### Preprocessing
 
@@ -30,7 +30,7 @@ Therefore the 3 channels of the BEV image were repurposed to hold the height (ma
 
 The annotations also had to be translated from the 3D coordinates to the 2D coordinates of the BEV image. This was done by projecting the 3D bounding boxes to the 2D BEV plane as illustrated in Figure 2.
 
-![Figure 2: Before and After Preprocessing](Resource/BeforeAfter.png)
+![Before and After Preprocessing](Resource/BeforeAfter.png)
 
 ## Model selection and training
 
@@ -67,31 +67,21 @@ The following runs were conducted:
 
 The results are displayed in Figures 3-8.
 
-**Overall metrics**
+![Overall Metrics](Resource/results_overall.png)
 
-![Figure 3: Overall Metrics](Resource/results_overall.png)
+![Car Metrics](Resource/results_car.png)
 
-**Cars metrics**
+![Truck/Bus Metrics](Resource/results_truck_bus.png)
 
-![Figure 4: Car Metrics](Resource/results_car.png)
+![Pedestrian Metrics](Resource/results_pedestrian.png)
 
-**Truck/Bus metrics**
-
-![Figure 5: Truck/Bus Metrics](Resource/results_truck_bus.png)
-
-**Pedestrian metrics**
-
-![Figure 6: Pedestrian Metrics](Resource/results_pedestrian.png)
-
-**Cyclist metrics**
-
-![Figure 7: Cyclist Metrics](Resource/results_cyclist.png)
+![Cyclist Metrics](Resource/results_cyclist.png)
 
 ### Detailed results S3
 
 We took a closer look at the results from the S3 run which are displayed in Figure 9.
 
-![Figure 8: ROC Curve](Resource/ROCCurves.png)
+![ROC Curve](Resource/ROCCurves.png)
 
 Discussion of the results ...
 
@@ -104,7 +94,7 @@ In order to witness the model in action, we developed a simple visualizer which:
 
 Using this tool, we were able to visually confirm that the model's predictions was consistent with the LiDAR point cloud as illustrated in Figure 10.
 
-![Figure 9: Inference Visualization](Resource/Inference.png)
+![Inference Visualization](Resource/Inference.png)
 
 ### Conclusion
 
