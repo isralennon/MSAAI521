@@ -99,7 +99,7 @@ Location: `src/Inference/LidarInference.py`
 
 **`preprocess_lidar(points)`**
 - Convert point cloud to BEV image
-- Returns: 1024x1024x3 BGR image
+- Returns: 1280x1280x3 BGR image
 
 **`predict(bev_image)`**
 - Run YOLO model on BEV image
@@ -205,7 +205,7 @@ nuscenes-devkit
 - **Fix**: Check that matplotlib backend is properly set (should use TkAgg)
 
 **Issue**: Bounding boxes misaligned
-- **Fix**: Ensure using correct model resolution (1024x1024)
+- **Fix**: Ensure using correct model resolution (1280x1280)
 
 **Issue**: ImportError for tkinter
 - **Fix**: Install with `sudo apt-get install python3-tk`

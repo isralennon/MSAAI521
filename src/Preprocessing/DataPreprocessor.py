@@ -72,9 +72,9 @@ class DataPreprocessor:
         """
         self.nusc = nusc
         
-        # Initialize preprocessing components with 1024x1024 image target
-        # Resolution calculation: 100m range / 1024 pixels = 0.09765625 m/pixel
-        target_resolution = 0.09765625  # Meters per pixel for 1024x1024 images
+        # Initialize preprocessing components with 1280x1280 image target
+        # Resolution calculation: 100m range / 1280 pixels = 0.078125 m/pixel
+        target_resolution = 0.078125  # Meters per pixel for 1280x1280 images
         
         self.pc_processor = PointCloudProcessor(nusc)
         self.rasterizer = BEVRasterizer(resolution=target_resolution)

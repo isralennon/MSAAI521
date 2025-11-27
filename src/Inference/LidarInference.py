@@ -72,8 +72,8 @@ class LidarInference:
         self.iou_threshold = iou_threshold
         
         # Initialize preprocessing components (must match training configuration)
-        # For 1024x1024 images: 100m range / 1024 pixels = 0.09765625 m/pixel
-        target_resolution = 0.09765625
+        # For 1280x1280 images: 100m range / 1280 pixels = 0.078125 m/pixel
+        target_resolution = 0.078125
         
         # Point cloud processor - handles loading and filtering LiDAR data
         # Note: nusc parameter is None for standalone inference

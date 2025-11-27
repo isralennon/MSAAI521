@@ -66,7 +66,7 @@ class ModelEvaluator:
         Args:
             conf_threshold: Confidence threshold for detections (default: 0.25)
             iou_threshold: IoU threshold for NMS (default: 0.45)
-            img_size: Input image size (default: 1024 to match BEV resolution)
+            img_size: Input image size (default: 1280 to match BEV resolution)
         
         Returns:
             Results object containing metrics and predictions

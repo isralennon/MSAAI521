@@ -59,8 +59,8 @@ class RealtimeVisualizer:
         
         # Visualization settings
         self.window_name = "Real-time LiDAR Object Detection"
-        self.display_width = 1024
-        self.display_height = 1024
+        self.display_width = 1280
+        self.display_height = 1280
         
         # Playback controls
         self.paused = False
