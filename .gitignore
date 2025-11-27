@@ -10,7 +10,7 @@ env/
 
 # Jupyter Notebook
 .ipynb_checkpoints/
-*.ipynb
+# *.ipynb
 
 # Model weights (large files)
 *.pt
@@ -21,7 +21,7 @@ env/
 # Output files
 *.mp4
 *.avi
-*.png
+# *.png
 *.jpg
 *.jpeg
 *.gif
