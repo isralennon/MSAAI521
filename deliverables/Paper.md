@@ -2,17 +2,31 @@
 
 ## Abstract
 
-Autonomous vehicles require reliable real-time perception systems to detect surrounding objects under various environmental conditions. While camera-based detection systems are mature and efficient, they struggle in low-light conditions and lack inherent depth information. LiDAR sensors provide superior 3D spatial awareness but traditional 3D detection models are computationally intensive and difficult to deploy. This project investigates a hybrid approach: converting 3D LiDAR point clouds into 2D Bird's-Eye View (BEV) images and training YOLOv12 for efficient object detection. We demonstrate that this approach combines the spatial accuracy of LiDAR with the computational efficiency of 2D detection architectures, achieving real-time performance suitable for autonomous driving applications.
+Autonomous vehicles require reliable real-time perception systems to detect surrounding objects under various environmental conditions, from clear skies to deep fog, rain, or snow. While camera-based detection systems are mature and efficient, they struggle in low-light or poor visibility conditions and lack inherent depth information. LiDAR sensors provide superior 3D spatial awareness and are designed to work well even with poor visibility conditions, but it comes with a cost: traditional 3D detection models are computationally intensive and difficult to deploy into a limited resources mobile environment. This project investigates a hybrid approach: converting 3D LiDAR point clouds into 2D Bird's-Eye View (BEV) images and training YOLOv12 for efficient object detection. Our goal is to demonstrate that this approach combines the besto of both worlds: spatial accuracy of LiDAR with the computational efficiency of 2D detection architectures, achieving real-time performance suitable for a portable autonomous driving system.
 
 ## 1. Introduction
 
 ### 1.1 Motivation
 
-Autonomous vehicles require real-time environment perception to detect and track surrounding objects accurately. The perception system must function reliably across varying lighting conditions, weather, and complex urban environments. Camera-based detectors, while computationally efficient, face limitations in poor lighting and lack direct depth information. LiDAR sensors overcome these limitations by providing accurate 3D measurements regardless of lighting conditions, but processing 3D point clouds for object detection traditionally requires specialized architectures like PointPillars or CenterPoint, which are computationally expensive and complex to train.
+In 1982 there was a famous TV show about a self-driving vehicle with artificial intelligence capable of talking, among other amazing features like video-calls or online wireless connectivity (before the Internet was even a thing). All these features were nothing but futuristic Science Fiction that seemed far away in an unreachable distant future.
+
+Today is the future of that decade, and many of those features that captured our imagination are now a reality, like devices that can talk back to you, 24/7 wireless online connectivity, video calls, and of course: self-driving cars.
+
+While only a few brands have offered fully autonomous vehicles out to the public, it's no longer fiction, but just a matter of time before the technology gets fully adopted. Before that happens, there are still challenges to solve.
+
+Autonomous vehicles require real-time environment perception to detect and track surrounding objects accurately. The perception system must function reliably across varying lighting conditions, weather, and complex urban environments. Camera-based detectors, while computationally efficient, face limitations in poor lighting and lack direct depth information. 
+
+LiDAR sensors overcome these limitations by providing accurate 3D measurements regardless of lighting conditions, as they work by sending short laser pulses of near-infrared light that can easily penetrate fog, snow, or rain, while being invisible to the human eye. After emitting the pulses, the LiDAR uses the speed of light by measuring the time it takes for them to bounce back in surrounding structures, then deducing the distance of such objects. 
+
+However, processing 3D point clouds for object detection traditionally requires specialized architectures like PointPillars or CenterPoint, which are computationally expensive and complex to train, which presents a challenge especially when trying to build a portable system for a self-driving vehicle.
 
 ### 1.2 Problem Statement
 
-This project addresses the following question: Can we leverage the efficiency of mature 2D object detection models by converting LiDAR point clouds into Bird's-Eye View images, while maintaining the spatial accuracy advantages of LiDAR sensing?
+Besides a high computing power requirement for real-time image processing, another challenge is depth: objects look smaller when they are further away, which might become a problem in object detection due to scale, as well as resolution limitations. This is why we have chosen Bird's-Eye View (BEV), an emulation of a perspective taken from above the autonomous vehicle (also known as the ego vehicle). From the BEV perspective, objects preserve their scale, making it easier for object-detection methods like YOLO, while lowering the computing power requirement.
+
+This project addresses the following question: Can we apply the efficiency of mature 2D object detection models by converting LiDAR point clouds into Bird's-Eye View images, while maintaining the spatial accuracy advantages of LiDAR sensing?
+
+With a positive outcome, this project could lower the cost of existing self-driving mechanisms while preserving efficiency, resulting in a much faster adoption of the technology by automakers.
 
 ### 1.3 Objectives
 
@@ -26,18 +40,20 @@ Our research objectives are:
 
 ### 1.4 Contributions
 
-This project makes the following contributions:
+We built the following features as part of our project:
 
 - A complete pipeline for converting nuScenes 3D LiDAR data into YOLO-compatible 2D BEV format
 - Implementation of coordinate transformation and axis-aligned bounding box computation for BEV projection
-- Two-stage transfer learning methodology adapted from COCO-pretrained weights to LiDAR BEV domain
-- Comprehensive evaluation demonstrating the feasibility of 2D detection models on LiDAR data
+- A two-stage transfer learning methodology adapted from COCO-pretrained weights to LiDAR BEV domain
+- A comprehensive evaluation demonstrating the feasibility of 2D detection models on LiDAR data
 
 ## 2. Dataset and Exploratory Analysis
 
 ### 2.1 nuScenes Dataset Overview
 
-We utilize the nuScenes dataset, a large-scale autonomous driving dataset collected by Motional and nuTonomy. The dataset provides multi-sensor data including LiDAR, RADAR, cameras, GPS, and IMU, collected in Boston and Singapore under diverse driving conditions.
+We utilize the nuScenes dataset, a large-scale autonomous driving dataset collected by Motional and nuTonomy. The dataset provides multi-sensor data including LiDAR, RADAR, cameras, GPS, and IMU, collected in Boston and Singapore under diverse driving conditions and over one thousand carefully planned driving scenes of about twenty seconds each. In this project we will use only on the LiDAR portion of the dataset for training the YOLO model, but we will use the rest of the data to perform validations.
+
+** Show Max's diagram of all sensor devices mounted on the car
 
 **Dataset Specifications:**
 - **Split Used:** v1.0-mini (approximately 4 GB) containing 10 scenes and 404 samples
@@ -57,9 +73,11 @@ The nuScenes dataset is organized hierarchically:
 - **Sample Data:** Individual sensor measurements (LiDAR, camera, RADAR)
 - **Annotations:** 3D bounding boxes with object category, size, orientation, and tracking IDs
 
+All these elements combined provide the empirical data plus the annotations that will be fed into the YOLO model.
+
 ### 2.3 Exploratory Data Analysis
 
-We conducted comprehensive exploratory analysis to understand the data characteristics:
+We conducted comprehensive exploratory analysis to understand the data characteristics, as well as verifying the completeness and consistency of the data:
 
 **Point Cloud Characteristics:**
 - Average points per scan: 30,000-40,000 points
@@ -72,6 +90,8 @@ We conducted comprehensive exploratory analysis to understand the data character
 - **Trucks/Buses:** Larger vehicles, less frequent but high visibility
 - **Pedestrians:** Smaller objects with sparse point representation, detection challenging
 - **Cyclists:** Small, fast-moving objects representing vulnerable road users
+
+** Show Santosh's chart that has camera images, radar, and lidar information.
 
 **Scene Diversity:**
 The dataset includes:
@@ -89,11 +109,17 @@ We visualized three levels of data:
 2. **Sample Level:** Individual timesteps with synchronized multi-sensor data
 3. **Annotation Level:** 3D bounding boxes overlaid on point clouds, demonstrating ground truth quality
 
-These visualizations confirmed the dataset's richness and the feasibility of BEV projection for object detection.
+These visualizations confirmed the dataset's richness and the feasibility of BEV projection for object detection. We also confirmed the completeness of the data, and visually checked the quality of the annotations accross a few randomly selected scenes, using all the available data (LiDAR, cameras, and radar information).
+
+** Show Santosh's BEV 2D and 3D representation of the data
+
+Our goal is to predict the annotated classes and their locations in each frame, which would allow the self-driving vehicle to make real-time decisions.
 
 ## 3. Data Preprocessing
 
 The preprocessing stage transforms raw 3D LiDAR point clouds into 2D BEV images suitable for YOLO training. This critical step determines detection quality and requires careful coordinate transformations and representation design.
+
+We chose an initial resolution of 1000 by 1000 pixels, which we adjusted later to 1024 by 1024 to improve our model's accuracy.
 
 ### 3.1 Preprocessing Pipeline
 
@@ -105,18 +131,26 @@ Our preprocessing pipeline consists of five steps:
 4. Transform 3D annotations to match sensor frame
 5. Convert 3D annotations to 2D YOLO format
 
+** Show 4 PNG result image examples
+
 ### 3.2 Point Cloud Loading and Coordinate Frame Strategy
 
-Each LiDAR scan contains approximately 30,000-40,000 points stored as 4D vectors: [x, y, z, intensity]. The nuScenes dataset stores point clouds in sensor frame but annotations in global coordinates. To ensure proper spatial alignment, we keep point clouds in their original LIDAR_TOP sensor frame and transform annotations to match.
+Each LiDAR scan contains approximately 30,000-40,000 points stored as 4D vectors: [x, y, z, intensity]. The nuScenes dataset stores point clouds in sensor frame but annotations in global coordinates. 
+
+Since we are modifying the resolution to improve the performance of the model, we must also scale the annotations accordingly to ensure proper spatial alignment.
 
 **Coordinate Frame Strategy:**
 - Point clouds: Loaded and remain in LIDAR_TOP sensor frame (no transformation applied)
 - Annotations: Transformed from global → ego vehicle → sensor frame
 - This alignment strategy avoids unnecessary point cloud transformations while ensuring bounding boxes correctly overlay the point cloud data
 
+As a result, all annotations reflect the correct locations of the detected objects, which we'll use for training and validation purposes.
+
 ### 3.3 Region of Interest Filtering
 
-We filter points to a 100m × 100m area around the vehicle:
+Lidar range can reach long distances, so we've decided to limit the processing to data within a range of 100m x 100m around the vehicle (328ft x 328ft).
+
+To do that, we filter points to a 100m × 100m area around the vehicle:
 - X-range: [-50m, 50m] (forward/backward)
 - Y-range: [-50m, 50m] (left/right)
 - Z-range: [-3m, 5m] (ground to elevated structures)
@@ -125,7 +159,9 @@ This filtering reduces computational load by 50-70% while retaining all relevant
 
 ### 3.4 Bird's-Eye View Rasterization
 
-The core innovation of our approach is converting 3D point clouds into 2D BEV images that encode spatial information in multiple channels.
+The core innovation of our approach is converting 3D point clouds into 2D BEV images that encode spatial information in multiple channels. The colors on the images won't technically represent real colors, but rather each RGB channel represents dimensions to be used by the YOLO model: height of the cloud point, intensity, and density.
+
+When visually inspected, the image appears to have very little contrast and some of the features might be quite faint for the human eye, but these values will be used with precision by the YOLO model.
 
 **BEV Image Specifications:**
 - Resolution: 0.1m per pixel
@@ -153,6 +189,8 @@ The core innovation of our approach is converting 3D point clouds into 2D BEV im
 ![](Resources/BEV.png)
 
 **Rasterization Process:**
+
+To convert our 4D data per cloud point into a 3-channel pixel, we used the transformation defined below.
 
 For each point (x, y, z, intensity):
 1. Compute pixel coordinates: `pixel_x = (x - x_min) / resolution`
@@ -194,7 +232,7 @@ We consolidate nuScenes' 23 categories into 4 classes:
 - Class 2: Pedestrians (human.pedestrian.*)
 - Class 3: Cyclists (vehicle.bicycle, vehicle.motorcycle)
 
-This reduces class imbalance and focuses on key autonomous driving objects.
+This reduces class imbalance and focuses on key autonomous driving objects, simplifying the processing for the model.
 
 ### 3.6 Dataset Organization
 
@@ -206,6 +244,8 @@ After preprocessing, the dataset is organized in YOLO-compatible structure:
 - **Total objects:** Thousands of annotated instances across four classes
 
 The dataset references original preprocessed files (no duplication) with split manifests defining train/val/test partitions.
+
+Worth mentioning that, while each scene contains about 20 seconds of frames, our YOLO processing will focus on one frame at a time.
 
 ## 4. Model Selection and Architecture
 
@@ -229,12 +269,12 @@ Traditional LiDAR detectors (PointPillars, CenterPoint) process 3D points direct
 
 ### 4.2 YOLOv12s Architecture
 
-We use YOLOv12s (small variant) as base model:
+We use YOLOv12s (small variant) as base model for our predictions:
 
 **Model Specifications:**
 - Parameters: 9.1 million (trainable)
 - Architecture: CSPDarknet backbone + FPN neck + detection head
-- Input: 1000×1000×3 (matches BEV resolution)
+- Input: 1024×1024×3
 - Output: 4 classes with bounding box predictions
 
 **Architecture Components:**
@@ -253,6 +293,8 @@ We use YOLOv12s (small variant) as base model:
    - Predicts bounding boxes and class probabilities
    - Three detection scales for multi-size objects
    - Anchor-free design (YOLOv12 innovation)
+
+With this approach, we can use a reliable tested model instead of building one from scratch, while still having the flexibility of train it and adapt it to this project's specific needs.
 
 ### 4.3 Transfer Learning Strategy
 
@@ -279,7 +321,7 @@ This staged approach prevents catastrophic forgetting while enabling domain adap
 - Optimizer: AdamW
 - Learning rate schedule: Cosine annealing
 - Weight decay: 0.0005
-- Image size: 1000×1000
+- Image size: 1024×1024
 
 **Data Augmentation:**
 - Rotation: ±15 degrees
@@ -329,7 +371,11 @@ We evaluate using standard object detection metrics:
 
 ### 5.2 Overall Performance
 
+We tested our model on different environments and configurations to find the best configuration settings. Here are the results of the best of our models
+
 [Note: These are placeholder metrics - replace with actual results after training]
+
+[Question: Should we include all our test results?]
 
 **Expected Performance:**
 - mAP@0.5: 0.60-0.70
@@ -379,7 +425,7 @@ Visualizations of model predictions on test set reveal:
 
 [Include example prediction visualizations showing successful and challenging detections]
 
-### 5.5 Comparison to Baseline
+### 5.5 Comparison to Baseline - NEED TO CONFIRM IF WE NEED THIS SECTION
 
 While direct comparison to specialized 3D detectors (PointPillars, CenterPoint) requires identical evaluation protocols, our approach offers distinct advantages:
 
@@ -426,6 +472,7 @@ Several limitations warrant discussion:
 - BEV projection discards height information
 - Vertically stacked objects (e.g., overpass with traffic below) may be ambiguous
 - Tall object height not directly observable
+- Smaller objects like pedestrians or cyclists had the lowest performance in our model, so more research needs to be done.
 
 **Axis-Aligned Bounding Boxes:**
 - Standard YOLO uses axis-aligned boxes
@@ -480,6 +527,11 @@ Several directions could extend this research:
 - Generate BEV at multiple resolutions
 - Capture both large vehicles and small pedestrians effectively
 - Hierarchical feature pyramid for BEV
+
+**Additional sensor data**
+- Incorporate Radar and Camera data
+- With a hybrid approach, detection of smaller objects can be improved from different perspectives
+- Since it would still be 2D processing, additional layers might not represent a significant cost increase
 
 **Temporal Fusion:**
 - Incorporate multiple LiDAR sweeps (sequential scans)
