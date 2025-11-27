@@ -65,7 +65,7 @@ The following runs were conducted:
 | **S3** | original resolution | 16 | original settings | 3377 (v1.0-trainval) | No |
 | **M2** | 1000x1000 | 4 | modified settings | 404 (v1.0-mini) | No |
 
-The results are displayed in Figures 3-8.
+The results are displayed in Figures 3-7.
 
 ![Overall Metrics](Resource/results_overall.png)
 
@@ -79,7 +79,7 @@ The results are displayed in Figures 3-8.
 
 ### Detailed results S3
 
-We took a closer look at the results from the S3 run which are displayed in Figure 9.
+We took a closer look at the results from the S3 run which are displayed in Figure 8.
 
 ![ROC Curve](Resource/ROCCurves.png)
 
@@ -92,7 +92,7 @@ In order to witness the model in action, we developed a simple visualizer which:
 - Ran inference on chronologically ordered images from a scene
 - Overlayed the bounding boxes on the images
 
-Using this tool, we were able to visually confirm that the model's predictions was consistent with the LiDAR point cloud as illustrated in Figure 10.
+Using this tool, we were able to visually confirm that the model's predictions was consistent with the LiDAR point cloud as illustrated in Figure 9.
 
 ![Inference Visualization](Resource/Inference.png)
 
