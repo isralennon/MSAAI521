@@ -28,26 +28,10 @@ def main():
 
     nusc = NuScenes(version=NUSCENES_VERSION, dataroot=NUSCENES_ROOT, verbose=False)
 
-    inspector = RawDataInspector(nusc)
-    inspector.list_scenes()
-    inspector.visualize_sample()
-    inspector.visualize_sample_data()
-    inspector.visualize_annotation()
-
-    inspector = RawDataInspector(nusc)
-
-    sample = nusc.sample[10]
-    lidar_token = sample['data']['LIDAR_TOP']
-
-    pc_info = inspector.inspect_point_cloud(lidar_token)
-    annotations = inspector.inspect_annotations(sample['token'])
-    inspector.visualize_3d_scene(sample['token'])
-
     print("\n=== Inspection Point 1: Raw Data ===")
-    print(f"\nPoint Cloud: {pc_info['num_points']} points")
-    print(f"X: [{pc_info['x_range'][0]:.2f}, {pc_info['x_range'][1]:.2f}] m")
-    print(f"Y: [{pc_info['y_range'][0]:.2f}, {pc_info['y_range'][1]:.2f}] m")
-    print(f"Z: [{pc_info['z_range'][0]:.2f}, {pc_info['z_range'][1]:.2f}] m")
+    inspector = RawDataInspector(nusc)
+    sample = nusc.sample[10]
+    inspector.inspect(sample)
 
     print("\n=== Preprocessing Stage ===")
     preprocessor = DataPreprocessor(nusc)
@@ -83,38 +67,42 @@ def main():
     model = model_initializer.initialize()
     
     trainer = TrainingOrchestrator(model, dataset_yaml_path)
-    
-    stage1_results, stage2_results = trainer.train_full_pipeline(
-        stage1_epochs=50,
-        stage2_epochs=150,
-        batch_size=4
-    )
+
+    # train stage 1
+    stage1_results = trainer.train_stage1(epochs=50, batch_size=4)
+
+    # Get best weights from Stage 1
+    stage1_best = Path(stage1_results.save_dir) / 'weights' / 'best.pt'
+
+    # train stage 2
+    stage2_results = trainer.train_stage2(stage1_best, epochs=150, batch_size=4)
     
     best_model_path = Path(stage2_results.save_dir) / 'weights' / 'best.pt'
     print(f"\n✓ Training complete. Best model: {best_model_path}")
 
-    print("\n=== Evaluation Stage ===")
+    # print("\n=== Evaluation Stage ===")
     
-    evaluator = ModelEvaluator(best_model_path, dataset_yaml_path)
-    results = evaluator.evaluate()
-    evaluator.print_metrics(results)
+    # evaluator = ModelEvaluator(best_model_path, dataset_yaml_path)
+    # results = evaluator.evaluate()
+    # evaluator.print_metrics(results)
     
-    analyzer = PerformanceAnalyzer()
-    summary = analyzer.compute_performance_summary(results)
+    # analyzer = PerformanceAnalyzer()
+    # summary = analyzer.compute_performance_summary(results)
     
-    labels_dir = Path(PREPROCESSED_ROOT) / 'labels'
-    analyzer.analyze_class_distribution(labels_dir)
+    # labels_dir = Path(PREPROCESSED_ROOT) / 'labels'
+    # analyzer.analyze_class_distribution(labels_dir)
     
-    visualizer = ResultsVisualizer()
-    test_images_dir = Path(splits['test']['images'][0]).parent
-    visualizer.visualize_predictions(evaluator.model, test_images_dir, num_samples=10)
-    visualizer.generate_performance_report(results)
+    # visualizer = ResultsVisualizer()
+    # test_images_dir = Path(splits['test']['images'][0]).parent
+    # visualizer.visualize_predictions(evaluator.model, test_images_dir, num_samples=10)
+    # visualizer.generate_performance_report(results)
     
-    print("\n✓ Pipeline complete")
-    print(f"mAP@0.5: {summary['overall']['mAP_50']:.4f}")
-    print(f"mAP@0.5:0.95: {summary['overall']['mAP_50_95']:.4f}")
+    # print("\n✓ Pipeline complete")
+    # print(f"mAP@0.5: {summary['overall']['mAP_50']:.4f}")
+    # print(f"mAP@0.5:0.95: {summary['overall']['mAP_50_95']:.4f}")
 
     return 0
+
 
 
 if __name__ == "__main__":
