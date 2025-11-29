@@ -117,14 +117,13 @@ class TrainingOrchestrator:
             'translate': 0.1,     # Translation
             'scale': 0.5,         # Scale
             'fliplr': 0.5,        # Horizontal flip
-            'mosaic': 0.5,        # Mosaic augmentation
-            'mixup': 0.0,         # MixUp augmentation
+            'mosaic': 1.0,        # Mosaic augmentation
+            'mixup': 0.1,         # MixUp augmentation
             
             # Hardware
             'device': 0,          # GPU 0 (use 'cpu' for CPU training)
-            'workers': 2,         # DataLoader workers
-            'cache': False,
-            'amp': True,
+            'workers': 8,         # DataLoader workers
+            
             # Logging and saving
             'project': str(self.runs_dir / 'detect'),
             'name': 'stage1_warmup',
@@ -233,14 +232,12 @@ class TrainingOrchestrator:
             'translate': 0.1,
             'scale': 0.5,
             'fliplr': 0.5,
-            'mosaic': 0.5,
-            'mixup': 0.0,
+            'mosaic': 1.0,
+            'mixup': 0.1,
             
             # Hardware
             'device': 0,
-            'workers': 2,         # DataLoader workers
-            'cache': False,
-            'amp': True,
+            'workers': 8,
             
             # Logging and saving
             'project': str(self.runs_dir / 'detect'),
