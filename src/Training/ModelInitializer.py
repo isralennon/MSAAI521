@@ -93,7 +93,9 @@ class ModelInitializer:
         # STEP 2: Initialize model
         # ============================================================
         # YOLO() automatically downloads weights if not found
-        model = YOLO(model_name)
+        # Use full path so weights are saved to build/models/ directory
+        model_path = self.models_dir / model_name
+        model = YOLO(str(model_path))
         
         # ============================================================
         # STEP 3: Print model info

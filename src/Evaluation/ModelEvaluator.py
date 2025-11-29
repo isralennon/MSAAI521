@@ -119,6 +119,8 @@ class ModelEvaluator:
         # ============================================================
         print(f"\nRunning inference on test set...")
         
+        from Globals import RUNS_ROOT
+        
         results = self.model.val(
             data=self.dataset_yaml,
             split='test',
@@ -128,7 +130,9 @@ class ModelEvaluator:
             iou=iou_threshold,
             plots=True,
             save_json=True,
-            save_txt=True
+            save_txt=True,
+            project=str(Path(RUNS_ROOT) / 'detect'),
+            name='val'
         )
         
         print("✓ Evaluation complete")
