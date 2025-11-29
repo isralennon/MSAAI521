@@ -409,22 +409,3 @@ class RawDataInspector:
             plt.savefig(output_path, dpi=150, bbox_inches='tight')
             plt.close()  # Free memory
             print(f"Saved annotation visualization to: {output_path}")
-
-    def inspect(self, sample):
-
-        self.list_scenes()
-        self.visualize_sample()
-        self.visualize_sample_data()
-        self.visualize_annotation()
-
-        lidar_token = sample['data']['LIDAR_TOP']
-
-        pc_info = self.inspect_point_cloud(lidar_token)
-        annotations = self.inspect_annotations(sample['token'])
-        self.visualize_3d_scene(sample['token'])
-
-        print("\n=== Inspection Point 1: Raw Data ===")
-        print(f"\nPoint Cloud: {pc_info['num_points']} points")
-        print(f"X: [{pc_info['x_range'][0]:.2f}, {pc_info['x_range'][1]:.2f}] m")
-        print(f"Y: [{pc_info['y_range'][0]:.2f}, {pc_info['y_range'][1]:.2f}] m")
-        print(f"Z: [{pc_info['z_range'][0]:.2f}, {pc_info['z_range'][1]:.2f}] m")
