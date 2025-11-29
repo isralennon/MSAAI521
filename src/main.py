@@ -67,29 +67,16 @@ def run_datadownload_validation(nusc: NuScenes):
     bev_inspector.visualize_grid(bev_images, yolo_labels_list, num_cols=2)
 
 def run_data_preparation(nusc: NuScenes):
-    downloader = DataDownloader()
-    if not downloader.check_and_prompt():
-        return 1
 
-    validator = DataValidator()
-    if not validator.validate():
-        print("Dataset validation failed")
-        return 1
-
-    print("\n=== Inspection Point 1: Raw Data ===")
-    inspector = RawDataInspector(nusc)
-    sample = nusc.sample[10]
-    inspector.inspect(sample)
-
-    print("\n=== Preprocessing Stage ===")
-    preprocessor = DataPreprocessor(nusc)
-    total = preprocessor.process_all_samples()
-    print(f"Processed {total} samples")
-
-    print("\n=== Inspection Point 2: Preprocessed Data ===")
-    bev_inspector = BEVInspector()
-    bev_images, yolo_labels_list = bev_inspector.load_samples(4)
-    bev_inspector.visualize_grid(bev_images, yolo_labels_list, num_cols=2)
+    print("\n=== Data Preparation Stage ===")
+    
+    splitter = DataSplitter(train_ratio=0.7, val_ratio=0.15, test_ratio=0.15)
+    splits = splitter.split()
+    
+    config_generator = DatasetConfigGenerator()
+    dataset_yaml_path = Path(DATA_ROOT) / 'dataset.yaml'
+    config_generator.generate(splits, dataset_yaml_path)
+    
 
 def run_training_stage_1(yaml: Path):
 
