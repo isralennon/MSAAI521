@@ -273,37 +273,38 @@ class TrainingOrchestrator:
         print(f"  Best weights: {results.save_dir}/weights/best.pt")
         
         return results
-    
-    def train_full_pipeline(self, stage1_epochs=50, stage2_epochs=150, batch_size=4):
+
+    def train_stage1(self, epochs=50, batch_size=4):
         """
-        Execute complete two-stage training pipeline.
-        
-        Convenience method that runs both training stages sequentially,
-        automatically passing the best weights from Stage 1 to Stage 2.
-        
+        Train stage 1 of the pipeline.
+
         Args:
-            stage1_epochs: Epochs for warm-up stage (default: 50)
-            stage2_epochs: Epochs for fine-tuning stage (default: 150)
-            batch_size: Batch size for both stages (default: 4, optimized for 1024px images)
-        
+            epochs: Number of training epochs (default: 50)
+            batch_size: Batch size (default: 4, optimized for 1024px images)
+
         Returns:
-            Tuple of (stage1_results, stage2_results)
+            Training results object from YOLO
         """
-        # Stage 1: Warm-up
-        stage1_results = self.train_stage1_warmup(
-            epochs=stage1_epochs,
+        return self.train_stage1_warmup(
+            epochs=epochs,
             batch_size=batch_size
         )
-        
-        # Get best weights from Stage 1
-        stage1_best = Path(stage1_results.save_dir) / 'weights' / 'best.pt'
-        
-        # Stage 2: Fine-tuning
-        stage2_results = self.train_stage2_finetune(
-            stage1_weights_path=stage1_best,
-            epochs=stage2_epochs,
+
+    def train_stage2(self, stage1_weights_path, epochs=150, batch_size=4):
+        """
+        Train stage 2 of the pipeline.
+
+        Args:
+            stage1_weights_path: Path to best weights from Stage 1
+            epochs: Number of training epochs (default: 150)
+            batch_size: Batch size (default: 4, optimized for 1024px images)
+
+        Returns:
+            Training results object from YOLO
+        """
+        return self.train_stage2_finetune(
+            stage1_weights_path=stage1_weights_path,
+            epochs=epochs,
             batch_size=batch_size
         )
-        
-        return stage1_results, stage2_results
 
