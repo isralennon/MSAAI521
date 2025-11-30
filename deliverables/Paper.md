@@ -386,6 +386,33 @@ We tested our model on different environments and configurations to find the bes
 
 These metrics demonstrate feasibility of 2D detection on LiDAR BEV representations, trading some accuracy from specialized 3D detectors for significant computational efficiency gains.
 
+**Actual results**
+
+| Run       | Resolution | Batch Size | Data Augmentation                          | Dataset Size         | Data Leakage |
+| --------- | ---------- | ---------- | ------------------------------------------ | -------------------- | ------------ |
+| **S1**    | 1000x1000  | 16         | original settings                          | 404 (v1.0-mini)      | Yes          |
+| **S2**    | 1240x1240  | 16         | original settings                          | 404 (v1.0-mini)      | Yes          |
+| **M1**    | 1000x1000  | 4          | modified settings                          | 404 (v1.0-mini)      | Yes          |
+| **I1**    | 1000x1000  | 16         | modified settings for phase 1, not phase 2 | 404 (v1.0-mini)      | No           |
+| **S3**    | 1024x1024  | 16         | original settings                          | 3377 (v1.0-trainval) | No           |
+| **M2**    | 1000x1000  | 4          | modified settings                          | 404 (v1.0-mini)      | No           |
+| **S4**    | 1280x1280  | 4          | original settings                          | 3377 (v1.0-trainval) | No           |
+| **M3,M4** | 1024x1024  | 4          | modified settings                          | 404 (v1.0-mini)      | No           |
+
+The results are displayed in Figures 3-7.
+
+![Overall Metrics](Resource/Graphs/results_overall.png)
+
+![Car Metrics](Resource/Graphs/results_car.png)
+
+![Truck/Bus Metrics](Resource/Graphs/results_truck_bus.png)
+
+![Pedestrian Metrics](Resource/Graphs/results_pedestrian.png)
+
+![Cyclist Metrics](Resource/Graphs/results_cyclist.png)
+
+
+
 ### 5.3 Per-Class Performance
 
 **Class 0 - Cars:**
