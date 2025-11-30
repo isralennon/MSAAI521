@@ -396,7 +396,7 @@ These metrics demonstrate feasibility of 2D detection on LiDAR BEV representatio
 | **I1**    | 1000x1000  | 16         | modified settings for phase 1, not phase 2 | 404 (v1.0-mini)      | No           |
 | **S3**    | 1024x1024  | 16         | original settings                          | 3377 (v1.0-trainval) | No           |
 | **M2**    | 1000x1000  | 4          | modified settings                          | 404 (v1.0-mini)      | No           |
-| **S4**    | 1240x1240  | 4          | modified settings                          | 3377 (v1.0-trainval) | No           |
+| **S4**    | 1280x1280  | 4          | original settings                          | 3377 (v1.0-trainval) | No           |
 | **M3,M4** | 1024x1024  | 4          | modified settings                          | 404 (v1.0-mini)      | No           |
 
 The results are displayed in Figures 3-7.
