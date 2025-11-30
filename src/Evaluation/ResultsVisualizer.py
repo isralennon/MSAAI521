@@ -17,6 +17,7 @@ import numpy as np
 from pathlib import Path
 import random
 from Globals import RESULTS_ROOT
+from ultralytics import YOLO
 
 
 class ResultsVisualizer:
@@ -52,7 +53,7 @@ class ResultsVisualizer:
             (255, 255, 0)   # Yellow: Cyclists
         ]
     
-    def visualize_predictions(self, model, test_images_dir, num_samples=10, conf_threshold=0.25):
+    def visualize_predictions(self, model_path, test_images_dir, num_samples=3, conf_threshold=0.25):
         """
         Visualize model predictions on random test images.
         
@@ -75,6 +76,8 @@ class ResultsVisualizer:
             - Saved as high-resolution PNG files
         """
         print(f"\nGenerating prediction visualizations...")
+
+        model = YOLO(str(model_path))
         
         # ============================================================
         # Select random test images
@@ -137,7 +140,7 @@ class ResultsVisualizer:
             plt.axis('off')
             plt.tight_layout()
             plt.savefig(output_path, dpi=150, bbox_inches='tight')
-            plt.close()
+            plt.show()
         
         print(f"✓ Saved {len(sample_images)} prediction visualizations to: {vis_dir}")
     
