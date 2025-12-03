@@ -38,7 +38,7 @@ def main():
     #     print("Dataset validation failed")
     #     return 1
 
-    # nusc = NuScenes(version=NUSCENES_VERSION, dataroot=NUSCENES_ROOT, verbose=False)
+    nusc = NuScenes(version=NUSCENES_VERSION, dataroot=NUSCENES_ROOT, verbose=False)
 
     # inspector = RawDataInspector(nusc)
     # inspector.list_scenes()
@@ -62,14 +62,14 @@ def main():
     # print(f"Z: [{pc_info['z_range'][0]:.2f}, {pc_info['z_range'][1]:.2f}] m")
 
     # print("\n=== Preprocessing Stage ===")
-    preprocessor = DataPreprocessor(nusc)
-    total = preprocessor.process_all_samples()
-    print(f"Processed {total} samples")
+    # preprocessor = DataPreprocessor(nusc)
+    # total = preprocessor.process_all_samples()
+    # print(f"Processed {total} samples")
 
-    print("\n=== Inspection Point 2: Preprocessed Data ===")
-    bev_inspector = BEVInspector()
-    bev_images, yolo_labels_list = bev_inspector.load_samples(4)
-    bev_inspector.visualize_grid(bev_images, yolo_labels_list, num_cols=2)
+    # print("\n=== Inspection Point 2: Preprocessed Data ===")
+    # bev_inspector = BEVInspector()
+    # bev_images, yolo_labels_list = bev_inspector.load_samples(4)
+    # bev_inspector.visualize_grid(bev_images, yolo_labels_list, num_cols=2)
 
 
     print("\n=== Data Preparation Stage ===")
@@ -98,16 +98,16 @@ def main():
 
     stage1_results = trainer.train_stage1(
         epochs=50,
-        batch_size=16
+        batch_size=4
     )
 
     stage1_best = Path(DATA_ROOT/RUNS_ROOT) / 'detect' / 'stage1_warmup' / 'weights' / 'best.pt'
     
-    stage2_results = trainer.train_stage2(
-        stage1_weights_path=stage1_results.save_dir / 'weights' / 'best.pt',
-        epochs=150,
-        batch_size=16
-    )
+    # stage2_results = trainer.train_stage2(
+    #     stage1_weights_path=stage1_results.save_dir / 'weights' / 'best.pt',
+    #     epochs=150,
+    #     batch_size=4
+    # )
     
     # best_model_path = Path(stage2_results.save_dir) / 'weights' / 'best.pt'
     # print(f"\n✓ Training complete. Best model: {best_model_path}")
