@@ -277,6 +277,18 @@ class TrainingOrchestrator:
         print(f"  Best weights: {results.save_dir}/weights/best.pt")
         
         return results
+        
+    def train_stage1(self, epochs=50, batch_size=16, img_size=1000):
+        """
+        Train stage 1 of the pipeline.
+        """
+        return self.train_stage1_warmup(epochs=epochs, batch_size=batch_size, img_size=img_size)
+    
+    def train_stage2(self, stage1_weights_path, epochs=150, batch_size=16, img_size=1000):
+        """
+        Train stage 2 of the pipeline.
+        """
+        return self.train_stage2_finetune(stage1_weights_path=stage1_weights_path, epochs=epochs, batch_size=batch_size, img_size=img_size)
 
     def train_full_pipeline(self, stage1_epochs=50, stage2_epochs=150, batch_size=4):
         """
