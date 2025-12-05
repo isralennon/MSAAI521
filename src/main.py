@@ -27,7 +27,7 @@ def main():
     run_training_stage_1(dataset_yaml_path)
     run_training_stage_2(dataset_yaml_path)
     
-    best_model_path = Path(RUNS_ROOT) / 'detect' / 'stage1_warmup' / 'weights' / 'best.pt'
+    best_model_path = Path(RUNS_ROOT) / 'detect' / 'stage2_finetune' / 'weights' / 'best.pt'
     
     results, summary = run_evaluation(best_model_path, dataset_yaml_path)
 
