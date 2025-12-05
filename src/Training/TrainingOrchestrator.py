@@ -117,14 +117,12 @@ class TrainingOrchestrator:
             'translate': 0.1,     # Translation
             'scale': 0.5,         # Scale
             'fliplr': 0.5,        # Horizontal flip
-            'mosaic': 0.5,        # Mosaic augmentation (reduced for memory)
-            'mixup': 0.0,         # MixUp augmentation (disabled for memory)
+            'mosaic': 1.0,        # Mosaic augmentation
+            'mixup': 0.1,         # MixUp augmentation
             
             # Hardware
             'device': 0,          # GPU 0 (use 'cpu' for CPU training)
-            'workers': 2,         # DataLoader workers (reduced for memory)
-            'cache': False,       # Disable caching to save memory
-            'amp': True,          # Automatic Mixed Precision for memory efficiency
+            'workers': 8,         # DataLoader workers
             
             # Logging and saving
             'project': str(self.runs_dir / 'detect'),
@@ -229,19 +227,17 @@ class TrainingOrchestrator:
             # Freezing
             'freeze': 0,          # Unfreeze all layers
             
-            # Data augmentation (reduced for memory)
+            # Data augmentation
             'degrees': 15.0,
             'translate': 0.1,
             'scale': 0.5,
             'fliplr': 0.5,
-            'mosaic': 0.5,        # Reduced from 1.0
-            'mixup': 0.0,         # Disabled from 0.1
+            'mosaic': 1.0,
+            'mixup': 0.1,
             
             # Hardware
             'device': 0,
-            'workers': 2,         # Reduced from 8
-            'cache': False,       # Disable caching
-            'amp': True,          # Enable AMP
+            'workers': 8,
             
             # Logging and saving
             'project': str(self.runs_dir / 'detect'),
