@@ -20,7 +20,8 @@ def main():
     nusc = NuScenes(version=NUSCENES_VERSION, dataroot=NUSCENES_ROOT, verbose=False)
 
     run_datadownload_validation(nusc)
-    run_data_preparation(nusc)
+    run_data_preprocessing(nusc)
+    run_data_splitting(nusc)
 
     dataset_yaml_path = Path(DATA_ROOT) / 'dataset.yaml'
     
@@ -49,13 +50,12 @@ def run_datadownload_validation(nusc: NuScenes):
         print("Dataset validation failed")
         return 1
 
-
-
     print("\n=== Inspection Point 1: Raw Data ===")
     inspector = RawDataInspector(nusc)
     sample = nusc.sample[10]
     inspector.inspect(sample)
 
+def run_data_preprocessing(nusc: NuScenes):
     print("\n=== Preprocessing Stage ===")
     preprocessor = DataPreprocessor(nusc)
     total = preprocessor.process_all_samples()
@@ -66,7 +66,7 @@ def run_datadownload_validation(nusc: NuScenes):
     bev_images, yolo_labels_list = bev_inspector.load_samples(4)
     bev_inspector.visualize_grid(bev_images, yolo_labels_list, num_cols=2)
 
-def run_data_preparation(nusc: NuScenes):
+def run_data_splitting(nusc: NuScenes):
 
     print("\n=== Data Preparation Stage ===")
     

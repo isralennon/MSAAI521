@@ -39,7 +39,7 @@ class BEVRasterizer:
         height: Image height in pixels
     """
     
-    def __init__(self, x_range=(-50, 50), y_range=(-50, 50), z_range=(-3, 5), resolution=0.1):
+    def __init__(self, x_range=(-50, 50), y_range=(-50, 50), z_range=(-3, 5), resolution=0.09765625):
         """
         Initialize BEV rasterizer with spatial parameters.
         

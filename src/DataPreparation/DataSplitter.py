@@ -114,7 +114,7 @@ class DataSplitter:
         train_val_stems, test_stems = train_test_split(
             file_stems,
             test_size=self.test_ratio,
-            random_state=self.random_seed,
+            random_state=None,
             shuffle=True
         )
         
@@ -126,7 +126,7 @@ class DataSplitter:
         train_stems, val_stems = train_test_split(
             train_val_stems,
             test_size=val_ratio_adjusted,
-            random_state=self.random_seed,
+            random_state=None,
             shuffle=True
         )
         
