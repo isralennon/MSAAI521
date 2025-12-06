@@ -227,7 +227,7 @@ class TrainingOrchestrator:
             # Freezing
             'freeze': 0,          # Unfreeze all layers
             
-            # Data augmentation (same as Stage 1)
+            # Data augmentation
             'degrees': 15.0,
             'translate': 0.1,
             'scale': 0.5,
