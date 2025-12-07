@@ -91,7 +91,7 @@ Figure 2: Dataset schema of NuScenes dataset
 
 We conducted comprehensive exploratory analysis to understand the data characteristics, as well as verifying the completeness and consistency of the data:
 
-The point cloud files were composed of 30,000 to 40,0000 points positioned in a 3D coordinate space which represents the surroundings of the vehicle. In addition to encoding positional information, they also encode height (values ranged from -3 to 5m) and intensity information (a measure of the reflectivity of the contact material). 
+The point cloud files were composed of 30,000 to 40,000 points positioned in a 3D coordinate space which represents the surroundings of the vehicle. In addition to encoding positional information, they also encode height (values ranged from -3 to 5m) and intensity information (a measure of the reflectivity of the contact material). 
 
 The per-class distribution of annotated objects was skewed, with ~50% of cars, 10% of trucks/buses, ~35% of pedestrians and ~5% of cyclists.
 
@@ -315,7 +315,7 @@ Standard YOLO uses axis-aligned boxes, so rotated vehicles had looser-fitting bo
 
 ### 7.3 Future Work
 
-In light of those findings, future work should focus on improving the performance of the model against underperforming classes which are cyclists and pedestrians, and on further improving the performance against cars and trucks. 
+In light of these findings, future work should focus on improving the performance of the model against underperforming classes which are cyclists and pedestrians, and on further improving the performance against cars and trucks. 
 
 Since increasing the size of the dataset only marginally improved the results, we must turn to other methods such as hyperparameter tuning and data augmentation. 
 
