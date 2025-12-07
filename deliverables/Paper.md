@@ -111,7 +111,7 @@ These visualizations confirmed the dataset's richness and the feasibility of BEV
 ## 4. Data Preprocessing
 
 
-The preprocessing stage involved three major operations: converting point cloud data to 2D representation, converting annotations from 3D to 2D, and reducing the aggregating the classes from 23 to 4.
+The preprocessing stage involved three major operations: converting point cloud data to 2D representation, converting annotations from 3D to 2D, and reducing the amount of classes from 23 to 4.
 
 First, we trimmed the point clouds to within a 100m × 100m area around the vehicle using X-range [-50m, 50m] for forward/backward, Y-range [-50m, 50m] for left/right, and Z-range [-3m, 5m] for ground to elevated structures. This filtering reduced computational load by 50-70% while retaining all relevant objects for autonomous driving perception.
 
@@ -292,7 +292,7 @@ Figure 10: Performance comparison across training configurations
 
 ### 6.5 Qualitative Results
 
-To witness the model in action, we developed a visualizer that ran inference on a reconstructed 3D driving scene and ran inference in real-time. The model demonstrated strong detection of vehicles in open areas, accurate localization of stationary objects, and robust performance across varying point densities. Challenging cases included occluded pedestrians behind vehicles, cyclists at far distances with sparse points, closely spaced vehicles with merged BEV footprints, and objects at BEV boundaries with clipped bounding boxes.
+To witness the model in action, we developed a visualizer that reconstructed the LiDAR data as 3D driving scenes and ran inference on them in real-time. We observed that the model demonstrated strong detection of vehicles in open areas, accurate localization of stationary objects, and robust performance across varying point densities. Challenging cases included occluded pedestrians behind vehicles, cyclists at far distances with sparse points, closely spaced vehicles with merged BEV footprints, and objects at BEV boundaries with clipped bounding boxes.
 
 ![](Resources/Visualizer.png)
 
