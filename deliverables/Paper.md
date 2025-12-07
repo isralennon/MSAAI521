@@ -2,7 +2,7 @@
 
 ## Abstract
 
-Autonomous vehicles require reliable real-time perception systems to detect surrounding objects under various environmental conditions, from clear skies to deep fog, rain, or snow. While camera-based detection systems are mature and efficient, they struggle in low-light or poor visibility conditions and lack inherent depth information. LiDAR sensors provide superior 3D spatial awareness and are designed to work well even with poor visibility conditions, but it comes with a cost: traditional 3D detection models are computationally intensive and difficult to deploy into a limited resources mobile environment. This project investigates a hybrid approach: converting 3D LiDAR point clouds into 2D Bird's-Eye View (BEV) images and training YOLOv12 for efficient object detection. Our goal is to demonstrate that this approach combines the besto of both worlds: spatial accuracy of LiDAR with the computational efficiency of 2D detection architectures, achieving real-time performance suitable for a portable autonomous driving system.
+Autonomous vehicles require reliable real-time perception systems to detect surrounding objects under various environmental conditions, from clear skies to deep fog, rain, or snow. While camera-based detection systems are mature and efficient, they struggle in low-light or poor visibility conditions and lack inherent depth information. LiDAR sensors provide superior 3D spatial awareness and are designed to work well even with poor visibility conditions, but it comes with a cost: traditional 3D detection models are computationally intensive and difficult to deploy into a limited resources mobile environment. This project investigates a hybrid approach: converting 3D LiDAR point clouds into 2D Bird's-Eye View (BEV) images and training YOLOv12 for efficient object detection. Our goal is to demonstrate that this approach combines the best of both worlds: spatial accuracy of LiDAR with the computational efficiency of 2D detection architectures, achieving real-time performance suitable for a portable autonomous driving system.
 
 ## 1. Introduction
 
@@ -18,15 +18,13 @@ Autonomous vehicles require real-time environment perception to detect and track
 
 LiDAR sensors overcome these limitations by providing accurate 3D measurements regardless of lighting conditions, as they work by sending short laser pulses of near-infrared light that can easily penetrate fog, snow, or rain, while being invisible to the human eye. After emitting the pulses, the LiDAR uses the speed of light by measuring the time it takes for them to bounce back in surrounding structures, then deducing the distance of such objects. 
 
-However, processing 3D point clouds for object detection traditionally requires specialized architectures like PointPillars or CenterPoint, which are computationally expensive and complex to train, which presents a challenge especially when trying to build a portable system for a self-driving vehicle.
+However, processing 3D point clouds for object detection traditionally requires specialized architectures like PointPillars or CenterPoint, that are computationally expensive and complex to train and present a challenge when trying to build an embedded system for a self-driving vehicle.
 
 ### 1.2 Problem Statement
 
 Besides a high computing power requirement for real-time image processing, another challenge is depth: objects look smaller when they are further away, which might become a problem in object detection due to scale, as well as resolution limitations. This is why we have chosen Bird's-Eye View (BEV), an emulation of a perspective taken from above the autonomous vehicle (also known as the ego vehicle). From the BEV perspective, objects preserve their scale, making it easier for object-detection methods like YOLO, while lowering the computing power requirement.
 
 This project addresses the following question: Can we apply the efficiency of mature 2D object detection models by converting LiDAR point clouds into Bird's-Eye View images, while maintaining the spatial accuracy advantages of LiDAR sensing?
-
-With a positive outcome, this project could lower the cost of existing self-driving mechanisms while preserving efficiency, resulting in a much faster adoption of the technology by automakers.
 
 ### 1.3 Objectives
 
@@ -80,12 +78,21 @@ Existing work presents a trade-off: 3D detectors offer spatial accuracy but requ
 
 ### 3.1 nuScenes Dataset Overview
 
-We utilize the nuScenes dataset, a large-scale autonomous driving dataset collected by Motional and nuTonomy. The dataset provides multi-sensor data including LiDAR, RADAR, cameras, GPS, and IMU, collected in Boston and Singapore under diverse driving conditions and over one thousand carefully planned driving scenes of about twenty seconds each. In this project we will use only on the LiDAR portion of the dataset for training the YOLO model, but we will use the rest of the data to perform validations.
+We utilize the nuScenes dataset, a large-scale autonomous driving dataset collected by Motional and nuTonomy. The dataset provides multi-sensor data including LiDAR, RADAR, cameras, GPS, and IMU, collected in Boston and Singapore under diverse driving conditions and over one thousand carefully planned driving scenes of about twenty seconds each. In this project we will use only on the LiDAR portion of the dataset for training the YOLO model.
 
-** Show Max's diagram of all sensor devices mounted on the car
+![](Resources/Sensors.png)
+
+Figure 1: Sensor arrangement on NuScenes cars
 
 **Dataset Specifications:**
-- **Split Used:** v1.0-mini (approximately 4 GB) containing 10 scenes and 404 samples
+
+| Dataset        | Source                | Scenes | Samples | Size   |
+|----------------|----------------------|--------|---------|--------|
+| v1.0-mini      | nuScenes official    | 10     | 404     | ~4 GB  |
+| v1.0-trainval  | Kaggle (nuScenes mirror) | 850    | 3,377   | ~50 GB |
+
+
+
 - **Primary Sensor:** LIDAR_TOP - 32-channel Velodyne HDL-32E operating at 20 Hz
 - **Annotations:** 3D bounding boxes across 23 object categories
 - **Coordinate Systems:** Global, ego vehicle, and sensor frames with calibration metadata
@@ -94,13 +101,16 @@ We utilize the nuScenes dataset, a large-scale autonomous driving dataset collec
 
 The nuScenes dataset is organized hierarchically:
 
-![](Resources/Schema.png)
+![](Resources/DatasetSchema.png)
+
+Figure 2: Dataset schema of NuScenes dataset
 
 **Key components:**
 - **Scenes:** High-level sequences of driving scenarios (20 seconds each)
 - **Samples:** Keyframes captured at 2 Hz representing synchronized multi-sensor snapshots
 - **Sample Data:** Individual sensor measurements (LiDAR, camera, RADAR)
 - **Annotations:** 3D bounding boxes with object category, size, orientation, and tracking IDs
+- **Annotations:** ~300,000 points per sweep
 
 All these elements combined provide the empirical data plus the annotations that will be fed into the YOLO model.
 
@@ -115,12 +125,11 @@ We conducted comprehensive exploratory analysis to understand the data character
 - Intensity values: Vary by material reflectivity (metal, vegetation, clothing)
 
 **Object Distribution:**
-- **Cars:** Most common class (~60% of annotations), large and well-represented
-- **Trucks/Buses:** Larger vehicles, less frequent but high visibility
-- **Pedestrians:** Smaller objects with sparse point representation, detection challenging
-- **Cyclists:** Small, fast-moving objects representing vulnerable road users
+Cars: Most common class (~50% of annotations), large and well-represented
+Trucks/Buses: Larger vehicles (~10% of annotations), less frequent but high visibility
+Pedestrians: Smaller objects (~35% of annotations), sparse point representation, detection challenging
+Cyclists: Small, fast-moving objects (~5% of annotations), representing vulnerable road users
 
-** Show Santosh's chart that has camera images, radar, and lidar information.
 
 **Scene Diversity:**
 The dataset includes:
@@ -175,6 +184,12 @@ Since we are modifying the resolution to improve the performance of the model, w
 
 As a result, all annotations reflect the correct locations of the detected objects, which we'll use for training and validation purposes.
 
+The transformation formula applied was as follows:
+
+$$P_{sensor}=R^{T}_{sensor}\cdot(R^{T}_{ego}\cdot(P_{global}-t_{ego})-t_{sensor})$$
+
+where $R$ and $t$ are rotation matrices and translation vectors from calibration data. Rotations are represented as quarterinions $(q_w, q_x, q_y, q_x)$ and converted to rotation matrices.
+
 ### 4.3 Region of Interest Filtering
 
 Lidar range can reach long distances, so we've decided to limit the processing to data within a range of 100m x 100m around the vehicle (328ft x 328ft).
@@ -193,10 +208,16 @@ The core innovation of our approach is converting 3D point clouds into 2D BEV im
 When visually inspected, the image appears to have very little contrast and some of the features might be quite faint for the human eye, but these values will be used with precision by the YOLO model.
 
 **BEV Image Specifications:**
-- Resolution: 0.1m per pixel
-- Dimensions: 1000 × 1000 pixels
+- Resolution: 0.09765625 per pixel for 1024 x 1024 images and 0.078125 for 1280 x 1280.
+- Dimensions: 1024 × 1024 and 1280 x 1280 pixels
 - Coverage: 100m × 100m physical area
 - Channels: 3 (height, intensity, density)
+
+Points in the point cloud are mapped to the image coordinate space using the following formula:
+
+$$u = \left\lfloor \frac{x - x_{\min}}{r} \right\rfloor, \quad v = H - 1 - \left\lfloor \frac{y - y_{\min}}{r} \right\rfloor$$
+
+where $x_{min}=y_{min}=-50m$ and $r$ is the resolution.
 
 **Channel Encoding:**
 
@@ -205,15 +226,23 @@ When visually inspected, the image appears to have very little contrast and some
    - Normalized to [0, 1] then gamma-corrected (power 0.5)
    - Helps distinguish vertical structures from ground plane
 
+$$C_H(u, v) = 255 \cdot \left( \frac{\max_i(z_i) - z_{\min}}{z_{\max} - z_{\min}} \right)^{0.5}$$
+
 2. **Intensity Channel (Green):** Encodes average LiDAR reflectivity
    - Formula: mean(intensity) for points per pixel
    - Captures material properties (metal, fabric, vegetation)
    - Aids in distinguishing object types
+  
+$$C_I(u, v) = 255 \cdot \frac{1}{n} \sum_{i=1}^{n} \text{intensity}_i$$
 
 3. **Density Channel (Blue):** Encodes point count per pixel
    - Formula: log(1 + point_count) for wide dynamic range compression
    - Indicates measurement confidence and proximity
    - Higher density near vehicle and on solid surfaces
+
+$$C_D(u, v) = 255 \cdot \frac{\log(1 + n)}{\log(1 + n_{\max})}$$
+
+where $n$ is the number of points at pixel $(u,v)$ and $n_{\max}$ is the maximum point count across all pixels.
 
 ![](Resources/BEV.png)
 
@@ -249,6 +278,18 @@ Standard YOLO format does not support rotated boxes. We compute axis-aligned bou
 3. Compute AABB center and dimensions from extents
 4. Normalize to [0, 1] for YOLO format
 
+Given a 3D bounding box with center $(c_x, c_y, c_z)$, dimensions $(l, w, h)$, and yaw angle $\theta$, the 8 corners in sensor frame are computed using rotation matrix $R_z(\theta)$. The AABB in BEV is then:
+
+$$x_{\min}^{\text{AABB}} = \min_i(x_i^{\text{corner}}), \quad x_{\max}^{\text{AABB}} = \max_i(x_i^{\text{corner}})$$
+
+$$y_{\min}^{\text{AABB}} = \min_i(y_i^{\text{corner}}), \quad y_{\max}^{\text{AABB}} = \max_i(y_i^{\text{corner}})$$
+
+**YOLO Format Normalization:**
+
+$$x_c = \frac{(x_{\min}^{\text{AABB}} + x_{\max}^{\text{AABB}})/2 - x_{\min}}{W \cdot r}, \quad w = \frac{x_{\max}^{\text{AABB}} - x_{\min}^{\text{AABB}}}{W \cdot r}$$
+
+$$y_c = 1 - \frac{(y_{\min}^{\text{AABB}} + y_{\max}^{\text{AABB}})/2 - y_{\min}}{H \cdot r}, \quad h = \frac{y_{\max}^{\text{AABB}} - y_{\min}^{\text{AABB}}}{H \cdot r}$$
+
 **YOLO Format:** `<class_id> <x_center> <y_center> <width> <height>`
 
 All spatial values normalized to [0, 1] relative to image dimensions.
@@ -263,18 +304,7 @@ We consolidate nuScenes' 23 categories into 4 classes:
 
 This reduces class imbalance and focuses on key autonomous driving objects, simplifying the processing for the model.
 
-### 4.6 Dataset Organization
 
-After preprocessing, the dataset is organized in YOLO-compatible structure:
-
-- **Images:** 404 BEV images (1000×1000×3 PNG)
-- **Labels:** 404 YOLO annotation files (one line per object)
-- **Split:** 70% training, 15% validation, 15% test
-- **Total objects:** Thousands of annotated instances across four classes
-
-The dataset references original preprocessed files (no duplication) with split manifests defining train/val/test partitions.
-
-Worth mentioning that, while each scene contains about 20 seconds of frames, our YOLO processing will focus on one frame at a time.
 
 ## 5. Model Selection and Architecture
 
@@ -370,21 +400,36 @@ This staged approach prevents catastrophic forgetting while enabling domain adap
 - GPU memory: ~12 GB with batch size 16
 - Device: Single GPU (CUDA device 0)
 
+### 5.5 YOLO Loss Function
+
+The total loss combines localization, objectness, and classification:
+
+$$L_{total} = \lambda_{box} L_{box} + \lambda_{obj} L_{obj} + \lambda_{cls} L_{cls}$$
+
+where:
+
+- $L_{box}$: CIoU loss for bounding box regression
+- $L_{obj}$: Binary cross-entropy for objectness
+- $L_{cls}$: Cross-entropy for class prediction
+
+**Complete IoU (CIoU) Loss:**
+
+$$L_{CIoU} = 1 - IoU + \frac{\rho^2(b, b^{gt})}{c^2} + \alpha v$$
+
+where $\rho$ is Euclidean distance, $c$ is diagonal of smallest enclosing box, and $v$ measures aspect ratio consistency.
+
 ## 6. Model Results
 
 ### 6.1 Evaluation Metrics
 
 We evaluate using standard object detection metrics:
 
-**mAP@0.5** (Mean Average Precision at IoU=0.5):
-- Considers detection correct if Intersection-over-Union ≥ 0.5
-- Standard COCO metric for loose localization
-- Higher values indicate better detection accuracy
+The threshold for differentiating between a true and false prediction is determined by the Intersection over Union of the prediction with the ground truth annotation using the following formula:
 
-**mAP@0.5:0.95:**
-- Average mAP across IoU thresholds [0.5, 0.55, ..., 0.95]
-- More stringent metric requiring tight localization
-- Better reflects real-world deployment needs
+$$\text{IoU} = \frac{|B_p \cap B_{gt}|}{|B_p \cup B_{gt}|}$$
+
+where $B_p$ is the predicted bounding box and $B_{gt}$ is the ground truth box.
+
 
 **Precision:** TP / (TP + FP)
 - Proportion of correct detections among all predictions
@@ -394,9 +439,18 @@ We evaluate using standard object detection metrics:
 - Proportion of ground truth objects detected
 - Higher values mean fewer missed objects
 
-**Inference Speed:**
-- Frames per second (FPS) on test hardware
-- Critical for real-time autonomous driving
+The formula for calculating Average Precision (AP) is:
+
+$$\text{AP} = \int_0^1 p(r) \, dr \approx \sum_{k=1}^{n} (r_k - r_{k-1}) \cdot p(r_k)$$
+
+where $p(r)$ is the precision at recall level $r$.
+
+**mAP@0.5:** Mean AP across all classes at IoU threshold 0.5.
+
+**mAP@0.5:0.95:** Average mAP across IoU thresholds $0.5, 0.55, 0.60, \ldots, 0.95$:
+
+$$\text{mAP@0.5:0.95} = \frac{1}{10} \sum_{t \in 0.5, 0.55, \ldots, 0.95} \text{mAP@}t$$
+
 
 ### 6.2 Overall Performance
 
