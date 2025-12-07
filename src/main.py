@@ -20,23 +20,23 @@ def main():
     nusc = NuScenes(version=NUSCENES_VERSION, dataroot=NUSCENES_ROOT, verbose=False)
 
     run_datadownload_validation(nusc)
-    run_data_preprocessing(nusc)
-    run_data_splitting(nusc)
+    # run_data_preprocessing(nusc)
+    # run_data_splitting(nusc)
 
-    dataset_yaml_path = Path(DATA_ROOT) / 'dataset.yaml'
+    # dataset_yaml_path = Path(DATA_ROOT) / 'dataset.yaml'
     
-    run_training_stage_1(dataset_yaml_path)
-    run_training_stage_2(dataset_yaml_path)
+    # run_training_stage_1(dataset_yaml_path)
+    # run_training_stage_2(dataset_yaml_path)
     
-    best_model_path = Path(RUNS_ROOT) / 'detect' / 'stage2_finetune' / 'weights' / 'best.pt'
+    # best_model_path = Path(RUNS_ROOT) / 'detect' / 'stage2_finetune' / 'weights' / 'best.pt'
     
-    results, summary = run_evaluation(best_model_path, dataset_yaml_path)
+    # results, summary = run_evaluation(best_model_path, dataset_yaml_path)
 
-    visualize_predictions(best_model_path, results)
+    # visualize_predictions(best_model_path, results)
     
-    print("\n✓ Pipeline complete")
-    print(f"mAP@0.5: {summary['overall']['mAP_50']:.4f}")
-    print(f"mAP@0.5:0.95: {summary['overall']['mAP_50_95']:.4f}")
+    # print("\n✓ Pipeline complete")
+    # print(f"mAP@0.5: {summary['overall']['mAP_50']:.4f}")
+    # print(f"mAP@0.5:0.95: {summary['overall']['mAP_50_95']:.4f}")
 
     return 0
 

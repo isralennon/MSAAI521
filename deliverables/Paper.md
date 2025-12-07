@@ -101,10 +101,6 @@ Figure 1: Sensor arrangement on NuScenes cars
 
 The nuScenes dataset is organized hierarchically:
 
-![](Resources/DatasetSchema.png)
-
-Figure 2: Dataset schema of NuScenes dataset
-
 **Key components:**
 - **Scenes:** High-level sequences of driving scenarios (20 seconds each)
 - **Samples:** Keyframes captured at 2 Hz representing synchronized multi-sensor snapshots
@@ -113,6 +109,10 @@ Figure 2: Dataset schema of NuScenes dataset
 - **Annotations:** ~300,000 points per sweep
 
 All these elements combined provide the empirical data plus the annotations that will be fed into the YOLO model.
+
+![](Resources/DatasetSchema.png)
+
+Figure 2: Dataset schema of NuScenes dataset
 
 ### 3.3 Exploratory Data Analysis
 
@@ -125,10 +125,11 @@ We conducted comprehensive exploratory analysis to understand the data character
 - Intensity values: Vary by material reflectivity (metal, vegetation, clothing)
 
 **Object Distribution:**
-Cars: Most common class (~50% of annotations), large and well-represented
-Trucks/Buses: Larger vehicles (~10% of annotations), less frequent but high visibility
-Pedestrians: Smaller objects (~35% of annotations), sparse point representation, detection challenging
-Cyclists: Small, fast-moving objects (~5% of annotations), representing vulnerable road users
+
+- Cars: Most common class (~50% of annotations), large and well-represented
+- Trucks/Buses: Larger vehicles (~10% of annotations), less frequent but high visibility
+- Pedestrians: Smaller objects (~35% of annotations), sparse point representation, detection challenging
+- Cyclists: Small, fast-moving objects (~5% of annotations), representing vulnerable road users
 
 
 **Scene Diversity:**
@@ -143,13 +144,21 @@ The dataset includes:
 
 We visualized three levels of data:
 
-1. **Scene Level:** 20-second driving sequences showing overall scenario context
-2. **Sample Level:** Individual timesteps with synchronized multi-sensor data
+1. **Timestep Level:** Individual timesteps with synchronized multi-sensor data and annotations
+
+![](Resources/TimestepVisualization.png)
+
+
+2. **Sample Level:** File associated with one of the sensors for a given timestep
+
+
+
+
 3. **Annotation Level:** 3D bounding boxes overlaid on point clouds, demonstrating ground truth quality
 
-These visualizations confirmed the dataset's richness and the feasibility of BEV projection for object detection. We also confirmed the completeness of the data, and visually checked the quality of the annotations accross a few randomly selected scenes, using all the available data (LiDAR, cameras, and radar information).
 
-** Show Santosh's BEV 2D and 3D representation of the data
+
+These visualizations confirmed the dataset's richness and the feasibility of BEV projection for object detection. We also confirmed the completeness of the data, and visually checked the quality of the annotations accross a few randomly selected scenes, using all the available data (LiDAR, cameras, and radar information).
 
 Our goal is to predict the annotated classes and their locations in each frame, which would allow the self-driving vehicle to make real-time decisions.
 
@@ -169,7 +178,7 @@ Our preprocessing pipeline consists of five steps:
 4. Transform 3D annotations to match sensor frame
 5. Convert 3D annotations to 2D YOLO format
 
-** Show 4 PNG result image examples
+
 
 ### 4.2 Point Cloud Loading and Coordinate Frame Strategy
 
@@ -472,6 +481,8 @@ Best Model Performance (Run 3):
 - Precision: 0.811
 - Recall: 0.416
 
+![](Resources/Graphs/results_overall.png)
+
 
 ### Per-Class Performance
 
@@ -489,30 +500,38 @@ Detection performance varies significantly across object classes, correlating wi
 
 #### Cars and trucks are more likely to be correctly predicted
 
-##### Class 0 - Cars (56.3% of instances):
+##### Class 0 - Cars (~50% of instances):
 
 - Best-performing class with mAP@0.5 of 0.792
 - Large size and high point density provide clear BEV signatures
 - Consistent detection across all experimental runs
 
-##### Class 1 - Trucks/Buses (7.6% of instances):
+![](Resources/Graphs/results_car.png)
+
+##### Class 1 - Trucks/Buses (~10% of instances):
 
 - Strong performance with mAP@0.5 of 0.750
 - Large BEV footprint aids detection despite lower frequency
+
+![](Resources/Graphs/results_truck_bus.png)
 
 #### Pedestrians and cyclists are more challenging for the model to predict
 
 Because of their smaller LiDAR signature, the model performance is not as strong for these two classes even though the high precision scores indicates that when the model does make a prediction, it is usually correct.
 
-#### Class 2 - Pedestrians (30.5% of instances):
+#### Class 2 - Pedestrians (~35% of instances):
 
 - Recall of 0.26 means that only one in four are caught
 - Lowest mAP@50 score with 0.750
 
-#### Class 3 - Cyclists (5.5% of instances)
+![](Resources/Graphs/results_pedestrian.png)
+
+#### Class 3 - Cyclists (~5% of instances)
 
 - Most underrepresented class.
 - Lowest recall at 0.12
+
+![](Resources/Graphs/results_cyclist.png)
 
 ### Training parameters comparison analysis
 
@@ -528,21 +547,10 @@ Increasing the resolution of the rasterized images from 1024 to 1280 (allowing t
 - improved mAP@50 for all classes, indicating that the model was able to make more predictions which overlapped by at least 50% with the ground truth
 - further improved cyclists recall from 0.10 to 0.12
 
+![](Resources/Graphs/results_comparison.png)
+
 
 These metrics demonstrate feasibility of 2D detection on LiDAR BEV representations, trading some accuracy from specialized 3D detectors for significant computational efficiency gains.
-
-
-
-![Overall Metrics](Resource/Graphs/results_overall.png)
-
-![Car Metrics](Resource/Graphs/results_car.png)
-
-![Truck/Bus Metrics](Resource/Graphs/results_truck_bus.png)
-
-![Pedestrian Metrics](Resource/Graphs/results_pedestrian.png)
-
-![Cyclist Metrics](Resource/Graphs/results_cyclist.png)
-
 
 
 ### 6.3 Qualitative Results
@@ -569,8 +577,8 @@ Visualizations of model predictions on test set reveal:
 - Closely spaced vehicles (merged BEV footprints)
 - Objects at BEV boundary (clipped bounding boxes)
 
-[Include example prediction visualizations showing successful and challenging detections]
 
+![](Resources/Visualizer.png)
 
 
 ## 7. Discussion
