@@ -63,11 +63,11 @@ Subsequently, Caesar et al. (2020) released nuScenes,a large-scale autonomous dr
 
 ### 3.1 nuScenes Dataset Overview
 
-We used the nuScenes dataset. The dataset provides multi-sensor data including LiDAR, RADAR, cameras, GPS, and IMU (Figure 1), collected in Boston and Singapore under diverse driving conditions and over one thousand carefully planned driving scenes of about twenty seconds each.
+We used the nuScenes dataset. The dataset provides multi-sensor data including LiDAR, RADAR, cameras, GPS, and IMU, collected in Boston and Singapore under diverse driving conditions and over one thousand carefully planned driving scenes of about twenty seconds each.
 
 ![](Resources/Sensors.png)
 
-Figure 1: Sensor arrangement on NuScenes cars
+Figure 1: This illustration shows the spatial placement and orientation of all major perception sensors: one top-mounted LiDAR providing 360° range measurements, six wide-angle cameras positioned around the vehicle for full visual coverage, five radar units for robust velocity and long-range sensing, and a centrally located Inertial Measurement Unit (IMU). Colored axes depict each sensor’s coordinate frame (X: red, Y: green, Z: blue) with up/down direction markers.
 
 The resulting dataset came in two flavors, which are described in Table 1.
 
@@ -95,7 +95,7 @@ The point cloud files were composed of 30,000 to 40,000 points positioned in a 3
 
 The per-class distribution of annotated objects was skewed, with ~50% of cars, 10% of trucks/buses, ~35% of pedestrians and ~5% of cyclists.
 
-The dataset contained a wide variety of driving scenarios, including urban interesections with heavy traffic, highways with high-speed vehicles, parking lots with stationary objects and pedestrians, construction zones with unusual vehicle types and day and night scenes across different weather conditions.
+The dataset contained a wide variety of driving scenarios, including urban intersections with heavy traffic, highways with high-speed vehicles, parking lots with stationary objects and pedestrians, construction zones with unusual vehicle types and day and night scenes across different weather conditions.
 
 
 ### 3.4 Visualization Examples
@@ -292,7 +292,15 @@ Figure 10: Performance comparison across training configurations
 
 ### 6.5 Qualitative Results
 
-To witness the model in action, we developed a visualizer that reconstructed the LiDAR data as 3D driving scenes and ran inference on them in real-time. We observed that the model demonstrated strong detection of vehicles in open areas, accurate localization of stationary objects, and robust performance across varying point densities. Challenging cases included occluded pedestrians behind vehicles, cyclists at far distances with sparse points, closely spaced vehicles with merged BEV footprints, and objects at BEV boundaries with clipped bounding boxes.
+To witness the model in action, we developed a visualizer that reconstructed the 3D LiDAR scene  with model predictions overlaid on the point cloud data.
+
+This visualization was generated from raw Ouster OS-1-128 PCAP files, which were decoded and converted into PCD format using the Ouster Sensor SDK. The reconstructed point cloud is displayed in full 3D, and YOLOv12 detection outputs are visualized as axis-aligned 3D bounding boxes over the predicted objects (Ouster, n.d.-a; Ouster, n.d.-b).
+
+
+We observed that the model demonstrated strong detection of vehicles in open areas, accurate localization of stationary objects, and robust performance across varying point densities. Challenging cases included occluded pedestrians behind vehicles, cyclists at far distances with sparse points, closely spaced vehicles with merged BEV footprints, and objects at BEV boundaries with clipped bounding boxes.
+
+
+
 
 ![](Resources/Visualizer.png)
 
@@ -315,11 +323,18 @@ Standard YOLO uses axis-aligned boxes, so rotated vehicles had looser-fitting bo
 
 ### 7.3 Future Work
 
-In light of these findings, future work should focus on improving the performance of the model against underperforming classes which are cyclists and pedestrians, and on further improving the performance against cars and trucks. 
 
-Since increasing the size of the dataset only marginally improved the results, we must turn to other methods such as hyperparameter tuning and data augmentation. 
+There are different areas of improvement:
 
-In addition, we recommend looking into increasing the feature space by injecting data from the other sensors into the BEV images, a process called multi-sensor fusion. This could be achieved for example with the camera images. This would involve calibrated geometric transformations to map the pixel information to the top-down BEV reference plane. Once that is done, the additional data could be piped in the model as additional layers.
+First is collecting data, increasing the number of objects of the minority classes in the dataset. This can be done during data collection. If there is still an imbalance in real world data, then additional instances can be created using synthetic means.
+
+Second is preprocessing techniques, one of these is increasing the resolution. Even though our resolution increase did not yield substantial improvements, it did show a trend towards improvement, therefore we posit that increasing it further will yield better results.
+
+Third, the data augmentation parameters passed into the YOLO model during training could be tweaked more such as rotation, translation, scaling, flipping, mosaic and mixup.
+
+Finally the hyperparameters of the training itself could be experimented with, such as learning rate, dropout, optimizer and loss function.
+
+In addition, we recommend looking into increasing the feature space by injecting data from the other sensors into the BEV images, a process called multi-sensor fusion. This could be achieved for example with the camera images. This would involve calibrated geometric transformations to map the pixel information to the top-down BEV reference plane. Once that is done, the additional data could be piped in the model as additional layers at training and inference time.
 
 
 
@@ -331,14 +346,23 @@ Our key contributions include a complete implementation pipeline from raw nuScen
 
 The results indicate that this hybrid approach offers a compelling trade-off: sacrificing some 3D spatial information for significant computational efficiency gains. For autonomous driving applications where real-time performance is critical, this approach provides a practical alternative to specialized 3D detection architectures. 
 
+We're getting to experience first- hand many technological advancements that were only fiction decades ago, on our way to a safer world where most vehicles are autonomous. The best part is that will likely get to experience other benefits that weren't imagined even in that 1982 TV show: a world without DUIs, where traffic jams or accidents are a thing of the past, in which the pilot becomes another passenger and gets to enjoy the ride while the car drives into the sunset... and that world may be closer than you think.
+
 
 ## References
+
+
+
 
 1. Redmon, J., Divvala, S., Girshick, R., & Farhadi, A. (2016). You only look once: Unified, real-time object detection. In *Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition* (pp. 779-788).
 
 2. Geiger, A., Lenz, P., & Urtasun, R. (2012). Are we ready for autonomous driving? The KITTI vision benchmark suite. In *Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition* (pp. 3354-3361).
 
 3. Caesar, H., Bankiti, V., Lang, A. H., Vora, S., Liong, V. E., Xu, Q., ... & Beijbom, O. (2020). nuScenes: A multimodal dataset for autonomous driving. In *Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition* (pp. 11621-11631).
+
+Ouster, Inc. (n.d.-a). OS1: Mid-range high-resolution lidar sensor. https://ouster.com/products/hardware/os1-lidar-sensor
+
+Ouster, Inc. (n.d.-b). Ouster Sensor SDK documentation. https://static.ouster.dev/sdk-docs/index.html
 
 4. Lang, A. H., Vora, S., Caesar, H., Zhou, L., Yang, J., & Beijbom, O. (2019). PointPillars: Fast encoders for object detection from point clouds. In *Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition* (pp. 12697-12705).
 
