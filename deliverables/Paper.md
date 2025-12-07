@@ -47,44 +47,31 @@ We built the following features as part of our project:
 
 ## 2. Literature Review
 
-The development of perception systems for autonomous vehicles has been shaped by advances in both sensor technology and deep learning architectures. This section reviews foundational work in three areas: autonomous driving datasets, 3D point cloud detection, and 2D object detection.
 
-### 2.1 Autonomous Driving Datasets
+The history of Computer Vision for self-driving has been marked by breakthroughs in two key areas: the progress in object detection using deep neural networks such as YOLO and the publication of large-scale autonomous driving datasets.
 
-Geiger et al. (2012) introduced the KITTI benchmark, establishing standardized evaluation protocols for autonomous driving perception tasks including stereo vision, optical flow, and 3D object detection. While foundational, KITTI's limited scale and sensor diversity motivated subsequent efforts.
+One of the major impediments to autonomous driving was the slow inference time of early computer vision models such as R-CNN, which required multiple passes for every prediction. Because of the high frequency of changes in driving environments and the need for split-second decisions, the speed of inference was a critical operational constraint. This changed when Redmon et al. (2016) introduced YOLO, an object detection architecture capable of outputting box coordinates and class probabilities in a single pass. This unified approach enabled real-time detection at 45 FPS while maintaining competitive accuracy, establishing YOLO as a practical choice for deployment-oriented applications.
 
-Caesar et al. (2020) addressed these limitations with nuScenes, providing 1000 driving scenes with full 360° sensor coverage including LiDAR, RADAR, and six cameras. The dataset's 3D bounding box annotations across 23 object categories, combined with calibrated multi-sensor data, enable research on sensor fusion and cross-modal perception. We use nuScenes as our primary data source due to its comprehensive LiDAR annotations and diverse urban driving scenarios.
+In addition to advances in object detection architectures, the trajectory of self-driving was reshaped by two major data-driven developments.
 
-### 2.2 3D Point Cloud Detection
+The KITTI dataset, proposed by Geiger et al. (2012), was the first large-scale real-world dataset with synchronized LiDAR, camera, and GPS samples. It formed the basis for the first set of unified self-driving benchmarks and evaluation metrics.
 
-Direct processing of 3D point clouds has produced specialized architectures optimized for LiDAR data. Lang et al. (2019) proposed PointPillars, which organizes points into vertical columns (pillars) and applies a simplified PointNet to encode features before 2D convolution. This design achieves real-time inference while maintaining competitive accuracy on KITTI benchmarks.
-
-Yin et al. (2021) introduced CenterPoint, which represents objects as center points and regresses bounding box attributes from point features. CenterPoint achieves state-of-the-art performance on nuScenes by combining center-based detection with a two-stage refinement process.
-
-While both architectures demonstrate strong detection performance, they require specialized 3D operations and custom training pipelines, presenting deployment challenges for resource-constrained mobile platforms.
-
-### 2.3 2D Object Detection and Transfer Learning
-
-Redmon et al. (2016) introduced YOLO, framing object detection as a single regression problem from image pixels to bounding box coordinates and class probabilities. This unified approach enabled real-time detection at 45 FPS while maintaining competitive accuracy, establishing YOLO as a practical choice for deployment-oriented applications.
-
-Lin et al. (2014) created the COCO dataset, providing 330,000 images with 80 object categories and instance-level segmentation masks. COCO-pretrained weights have become standard initialization for object detectors, as the learned features (edges, textures, shapes) transfer effectively across visual domains.
-
-### 2.4 Gap Addressed
-
-Existing work presents a trade-off: 3D detectors offer spatial accuracy but require specialized architectures, while 2D detectors are efficient but designed for camera images. Our approach bridges this gap by projecting LiDAR point clouds into Bird's-Eye View representations, enabling mature 2D architectures to process LiDAR data while preserving spatial relationships critical for autonomous driving
+Subsequently, Caesar et al. (2020) released nuScenes,a large-scale autonomous driving dataset collected by Motional and nuTonomy. It contained samples from 1000 driving scenes with full 360° sensor coverage including LiDAR, RADAR, and six cameras. This dataset became a landmark in the industry and further solidified the performance metrics and evaluation goals used for self-driving perception models.
 
 
 ## 3. Dataset and Exploratory Analysis
 
 ### 3.1 nuScenes Dataset Overview
 
-We utilize the nuScenes dataset, a large-scale autonomous driving dataset collected by Motional and nuTonomy. The dataset provides multi-sensor data including LiDAR, RADAR, cameras, GPS, and IMU, collected in Boston and Singapore under diverse driving conditions and over one thousand carefully planned driving scenes of about twenty seconds each. In this project we will use only on the LiDAR portion of the dataset for training the YOLO model.
+We used the nuScenes dataset. The dataset provides multi-sensor data including LiDAR, RADAR, cameras, GPS, and IMU (Figure 1), collected in Boston and Singapore under diverse driving conditions and over one thousand carefully planned driving scenes of about twenty seconds each.
 
 ![](Resources/Sensors.png)
 
 Figure 1: Sensor arrangement on NuScenes cars
 
-**Dataset Specifications:**
+The resulting dataset came in two flavors, which are described in Table 1.
+
+Table 1: Dataset Specifications:
 
 | Dataset        | Source                | Scenes | Samples | Size   |
 |----------------|----------------------|--------|---------|--------|
@@ -92,23 +79,9 @@ Figure 1: Sensor arrangement on NuScenes cars
 | v1.0-trainval  | Kaggle (nuScenes mirror) | 850    | 3,377   | ~50 GB |
 
 
-
-- **Primary Sensor:** LIDAR_TOP - 32-channel Velodyne HDL-32E operating at 20 Hz
-- **Annotations:** 3D bounding boxes across 23 object categories
-- **Coordinate Systems:** Global, ego vehicle, and sensor frames with calibration metadata
-
 ### 3.2 Dataset Structure
 
-The nuScenes dataset is organized hierarchically:
-
-**Key components:**
-- **Scenes:** High-level sequences of driving scenarios (20 seconds each)
-- **Samples:** Keyframes captured at 2 Hz representing synchronized multi-sensor snapshots
-- **Sample Data:** Individual sensor measurements (LiDAR, camera, RADAR)
-- **Annotations:** 3D bounding boxes with object category, size, orientation, and tracking IDs
-- **Annotations:** ~300,000 points per sweep
-
-All these elements combined provide the empirical data plus the annotations that will be fed into the YOLO model.
+As illustrated in Figure 2, the nuScenes dataset is organized hierarchically with scenes as the top-level ojects. Each scene is a 20 second driving sequence and contains 20 samples captured at 2Hz (twice per second). Each sample contains one snapshot from each sensor on the car, including the LiDAR. In addition, each sample contains a series of annotations as class annotated bounding boxes.
 
 ![](Resources/DatasetSchema.png)
 
@@ -118,27 +91,12 @@ Figure 2: Dataset schema of NuScenes dataset
 
 We conducted comprehensive exploratory analysis to understand the data characteristics, as well as verifying the completeness and consistency of the data:
 
-**Point Cloud Characteristics:**
-- Average points per scan: 30,000-40,000 points
-- Spatial range: Approximately 100m × 100m around vehicle
-- Height range: -3m to 5m (ground to elevated structures)
-- Intensity values: Vary by material reflectivity (metal, vegetation, clothing)
+The point cloud files are composed of 30,000 to 40,0000 points positioned in a 3D coordinate space which represents the surroundings of the vehicle. In addition to encoding positional information, they also encode height (values ranged from -3 to 5m) and intensity information (a measure of the reflectivity of the contact material). 
 
-**Object Distribution:**
+The per-class distribution of annotated objects was skewed, with ~50% of cars, 10% of trucks/buses, ~35% of pedestrians and ~5% of cyclists.
 
-- Cars: Most common class (~50% of annotations), large and well-represented
-- Trucks/Buses: Larger vehicles (~10% of annotations), less frequent but high visibility
-- Pedestrians: Smaller objects (~35% of annotations), sparse point representation, detection challenging
-- Cyclists: Small, fast-moving objects (~5% of annotations), representing vulnerable road users
+The dataset contained a wide variety of driving scenarios, including urban interesections with heavy traffic, highways with high-speed vehicles, parking lots with stationary objects and pedestrians, construction zones with unusual vehicle types and day and night scenes across different weather conditions.
 
-
-**Scene Diversity:**
-The dataset includes:
-- Urban intersections with heavy traffic
-- Highway driving with high-speed vehicles
-- Parking lots with stationary objects and pedestrians
-- Construction zones with unusual vehicle types
-- Day and night scenarios across different weather conditions
 
 ### 3.4 Visualization Examples
 
