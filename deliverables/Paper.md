@@ -18,8 +18,6 @@ Autonomous vehicles require real-time environment perception to detect and track
 
 LiDAR sensors overcome these limitations by providing accurate 3D measurements regardless of lighting conditions, as they work by sending short laser pulses of near-infrared light that can easily penetrate fog, snow, or rain, while being invisible to the human eye. After emitting the pulses, the LiDAR uses the speed of light by measuring the time it takes for them to bounce back in surrounding structures, then deducing the distance of such objects. 
 
-However, processing 3D point clouds for object detection traditionally requires specialized architectures like PointPillars (Lang, A. H. et al., 2019) or CenterPoint (Yin, T. et al., 2021), that are computationally expensive and complex to train and present a challenge when trying to build an embedded system for a self-driving vehicle.
-
 ### 1.2 Problem Statement
 
 Besides a high computing power requirement for real-time image processing, another challenge is depth: objects look smaller when they are further away, which might become a problem in object detection due to scale, as well as resolution limitations. This is why we have chosen Bird's-Eye View (BEV), an emulation of a perspective taken from above the autonomous vehicle (also known as the ego vehicle). From the BEV perspective, objects preserve their scale, making it easier for object-detection methods like YOLO, while lowering the computing power requirement.
@@ -50,7 +48,7 @@ We built the following features as part of our project:
 
 The history of Computer Vision for self-driving has been marked by breakthroughs in two key areas: the progress in object detection using deep neural networks such as YOLO and the publication of large-scale autonomous driving datasets.
 
-One of the major impediments to autonomous driving was the slow inference time of early computer vision models such as R-CNN, which required multiple passes for every prediction. Because of the high frequency of changes in driving environments and the need for split-second decisions, the speed of inference was a critical operational constraint. This changed when Redmon et al. (2016) introduced YOLO, an object detection architecture capable of outputting box coordinates and class probabilities in a single pass. This unified approach enabled real-time detection at 45 FPS while maintaining competitive accuracy, establishing YOLO as a practical choice for deployment-oriented applications.
+One of the major impediments to autonomous driving was the slow inference time of early computer vision models such as R-CNN (Girshick et al., 2014), which required multiple passes for every prediction. Because of the high frequency of changes in driving environments and the need for split-second decisions, the speed of inference was a critical operational constraint. This changed when Redmon et al. (2016) introduced YOLO, an object detection architecture capable of outputting box coordinates and class probabilities in a single pass. This unified approach enabled real-time detection at 45 FPS while maintaining competitive accuracy, establishing YOLO as a practical choice for deployment-oriented applications.
 
 In addition to advances in object detection architectures, the trajectory of self-driving was reshaped by two major data-driven developments.
 
@@ -65,13 +63,23 @@ Subsequently, Caesar et al. (2020) released nuScenes,a large-scale autonomous dr
 
 We used the nuScenes dataset. The dataset provides multi-sensor data including LiDAR, RADAR, cameras, GPS, and IMU, collected in Boston and Singapore under diverse driving conditions and over one thousand carefully planned driving scenes of about twenty seconds each.
 
+Figure 1 shows the spatial placement and orientation of all major perception
+sensors: one top-mounted LiDAR providing 360° range measurements, six wide-angle
+cameras positioned around the vehicle for full visual coverage, five radar units for robust
+velocity and long-range sensing, and a centrally located Inertial Measurement Unit (IMU).
+Colored axes depict each sensor’s coordinate frame (X: red, Y: green, Z: blue) with
+up/down direction markers.
+
+**Figure 1**  
+*Sensor Placement on Vehicle*
+
 ![](Resources/Sensors.png)
 
-Figure 1: This illustration shows the spatial placement and orientation of all major perception sensors: one top-mounted LiDAR providing 360° range measurements, six wide-angle cameras positioned around the vehicle for full visual coverage, five radar units for robust velocity and long-range sensing, and a centrally located Inertial Measurement Unit (IMU). Colored axes depict each sensor’s coordinate frame (X: red, Y: green, Z: blue) with up/down direction markers.
 
 The resulting dataset came in two flavors, which are described in Table 1.
 
-Table 1: Dataset Specifications:
+**Table 1**  
+*Dataset Specifications*
 
 | Dataset        | Source                | Scenes | Samples | Size   |
 |----------------|----------------------|--------|---------|--------|
@@ -81,11 +89,13 @@ Table 1: Dataset Specifications:
 
 ### 3.2 Dataset Structure
 
-As illustrated in Figure 2, the nuScenes dataset is organized hierarchically with scenes as the top-level ojects. Each scene is a 20 second driving sequence and contains 20 samples captured at 2Hz (twice per second). Each sample contains one snapshot from each sensor on the car, including the LiDAR. In addition, each sample contains a series of annotations as class annotated bounding boxes.
+As illustrated in Figure 2, the nuScenes dataset is organized hierarchically with scenes as the top-level ojects. Each scene is a 20 second driving sequence and contains 20 samples captured at 2Hz (twice per second). Each sample contains one snapshot from each sensor on the car, including the LiDAR. In addition, each sample contains a series of annotations as class-annotated bounding boxes.
 
+**Figure 2**  
+*Dataset schema of NuScenes dataset*
 ![](Resources/DatasetSchema.png)
 
-Figure 2: Dataset schema of NuScenes dataset
+
 
 ### 3.3 Exploratory Data Analysis
 
@@ -102,9 +112,10 @@ The dataset contained a wide variety of driving scenarios, including urban inter
 
 We visually inspected the data at the sample level, at the sensor level, and at the annotation level (Figure 3).
 
+**Figure 3**  
+*Sample visualization*
 ![](Resources/TimestepVisualization.png)
 
-Figure 3: Sample visualization
 
 These visualizations confirmed the dataset's richness and the feasibility of BEV projection for object detection. We also confirmed the completeness of the data and visually checked the quality of the annotations across a few randomly selected scenes. 
 
@@ -138,7 +149,7 @@ $$C_D(u, v) = 255 \cdot \frac{\log(1 + n)}{\log(1 + n_{\max})}$$
 where $n$ is the number of points at pixel $(u,v)$ and $n_{\max}$ is the maximum point count across all pixels. Figure 4 shows an example BEV image with all three channels.
 
 
-Because the nuScenes dataset stores point clouds in the sensor coordinate space but annotations in global coordinates, we had to transpose the annotations using a two step process: from global coordinate space to ego vehicle coordinate space, then from ego vehicle coordinate space to sensor coordinate space.
+Because the nuScenes dataset stores point clouds in the sensor coordinate space but annotations in global coordinates, we had to transpose the annotations using a two-step process: from global coordinate space to ego vehicle coordinate space, then from ego vehicle coordinate space to sensor coordinate space.
 
 The transformation formula applied was:
 
@@ -160,13 +171,11 @@ $$y_c = 1 - \frac{(y_{\min}^{\text{AABB}} + y_{\max}^{\text{AABB}})/2 - y_{\min}
 
 Finally we consolidated nuScenes' 23 categories into 4 classes: cars (Class 0), trucks/buses (Class 1), pedestrians (Class 2), and cyclists (Class 3). This reduced class imbalance and focused on key autonomous driving objects.
 
-As shown in Figure 4, the preprocessed images (center) show the point cloud data converted to BEV perspective and annotations are correctly positioned around the ego vehicle.
+As shown in Figure 4, the preprocessed images (center) show the point cloud data converted to BEV perspective and annotations correctly positioned around the ego vehicle.
 
-
+**Figure 4**  
+*Preprocessed Images with Annotations and corresponding camera images*
 ![](Resources/BEV.png)
-
-Figure 4: Preprocessed images with annotations and corresponding camera images.
-
 
 
 
@@ -174,7 +183,7 @@ Figure 4: Preprocessed images with annotations and corresponding camera images.
 
 ### 5.1 Model Architecture
 
-We selected YOLO (You Only Look Once) for its real-time performance as a single-stage detector, its mature ecosystem with extensive testing on diverse 2D datasets, and the availability of pretrained COCO weights for transfer learning. 
+We selected YOLO (You Only Look Once) for its real-time performance as a single-stage detector, its mature ecosystem with extensive testing on diverse 2D datasets, and the availability of pretrained COCO weights (Lin et al., 2014) for transfer learning. 
 
 We used YOLOv12s (small variant) with 9.1 million trainable parameters. The architecture consisted of a CSPDarknet backbone that extracts hierarchical features at multiple scales (pretrained on COCO's 80 RGB image classes), a Feature Pyramid Network neck that fuses multi-scale features through top-down and bottom-up pathways, and an anchor-free detection head that predicts bounding boxes and class probabilities at three detection scales. This allowed us to use a reliable tested model while retaining the flexibility to train and adapt it to this project's specific needs.
 
@@ -224,7 +233,8 @@ $$\text{mAP@0.5:0.95} = \frac{1}{10} \sum_{t \in 0.5, 0.55, \ldots, 0.95} \text{
 
 We conducted training runs across both datasets with different configurations. Table 2 summarizes our results.
 
-Table 2: Overall performance across runs
+**Table 2**  
+*Overall performance across runs*
 
 | Run | Dataset       | Resolution | mAP@0.5 | mAP@0.5:0.95 | Precision | Recall |
 | --- | ------------- | ---------- | ------- | ------------ | --------- | ------ |
@@ -234,15 +244,18 @@ Table 2: Overall performance across runs
 
 The results indicated a steady increase in performance across all metrics, with the best model (Run 3) achieving mAP@0.5 of 0.630, mAP@0.5:0.95 of 0.380, precision of 0.811, and recall of 0.416 (Figure 5).
 
+**Figure 5**  
+*Overall performance metrics across runs*
 ![](Resources/Graphs/results_overall.png)
 
-Figure 5: Overall performance metrics across runs
+
 
 ### 6.3 Per-Class Performance
 
 Detection performance varied significantly across object classes, correlating with object size and LiDAR point density. Table 3 shows per-class metrics for the best run.
 
-Table 3: Per-class performance (Run 3)
+**Table 3**  
+*Per-class Performance (Run 3)*
 
 | Class      | mAP@0.5 | Precision | Recall |
 | ---------- | ------- | --------- | ------ |
@@ -253,29 +266,35 @@ Table 3: Per-class performance (Run 3)
 
 Cars (~50% of instances) were the best-performing class with mAP@0.5 of 0.792. Their large size and high point density provide clear BEV signatures (Figure 6). 
 
+**Figure 6**  
+*Car Detection Performance across Runs*
 ![](Resources/Graphs/results_car.png)
 
-Figure 6: Car detection performance across runs
+
 
 Trucks/buses (~10% of instances) showed strong performance with mAP@0.5 of 0.750, aided by their large BEV footprint despite lower frequency (Figure 7).
 
+**Figure 7**  
+*Truck/Bus Detection Performance across Runs*
 ![](Resources/Graphs/results_truck_bus.png)
 
-Figure 7: Truck/Bus detection performance across runs
 
 Pedestrians and cyclists proved more challenging due to their smaller LiDAR signatures, though high precision scores indicated that when the model did make a prediction, it was usually correct. 
 
 Pedestrians (~35% of instances) had a recall of 0.262, meaning only one in four were detected (Figure 8). 
 
+**Figure 8**  
+*Pedestrian Detection Performance across Runs*
+
 ![](Resources/Graphs/results_pedestrian.png)
 
 Cyclists (~5% of instances) were the most underrepresented class with the lowest recall at 0.120 (Figure 9).
 
-Figure 8: Pedestrian detection performance across runs
 
+**Figure 9**  
+*Cyclist detection performance across runs*
 ![](Resources/Graphs/results_cyclist.png)
 
-Figure 9: Cyclist detection performance across runs
 
 ### 6.4 Training Parameter Comparison
 
@@ -285,9 +304,9 @@ Increasing dataset size produced negligible improvements in mAP@0.5 and recall f
 
 Increasing resolution from 1024 to 1280 improved mAP@0.5 for all classes, indicating that the model was able to make more predictions overlapping at least 50% with ground truth. Cyclist recall further improved from 0.10 to 0.12 (Figure 10).
 
+**Figure 10**  
+*Performance Comparison across Training Configurations*
 ![](Resources/Graphs/results_comparison.png)
-
-Figure 10: Performance comparison across training configurations
 
 
 ### 6.5 Qualitative Results
@@ -300,11 +319,12 @@ This visualization was generated from raw Ouster OS-1-128 PCAP files, which were
 We observed that the model demonstrated strong detection of vehicles in open areas, accurate localization of stationary objects, and robust performance across varying point densities. Challenging cases included occluded pedestrians behind vehicles, cyclists at far distances with sparse points, closely spaced vehicles with merged BEV footprints, and objects at BEV boundaries with clipped bounding boxes.
 
 
-
+**Figure 11**   
+*Visualizer showing Model Predictions overlaid on 3D point cloud sensor data*
 
 ![](Resources/Visualizer.png)
 
-Figure 11: Visualizer showing model predictions overlaid on BEV images
+
 
 
 ## 7. Discussion
