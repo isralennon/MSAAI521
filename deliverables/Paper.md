@@ -89,10 +89,10 @@ The resulting dataset came in two flavors, which are described in Table 1.
 
 ### 3.2 Dataset Structure
 
-As illustrated in Figure 2, the nuScenes dataset is organized hierarchically with scenes as the top-level ojects. Each scene is a 20 second driving sequence and contains 20 samples captured at 2Hz (twice per second). Each sample contains one snapshot from each sensor on the car, including the LiDAR. In addition, each sample contains a series of annotations as class-annotated bounding boxes.
+As illustrated in Figure 2, the nuScenes dataset is organized hierarchically with scenes as the top-level ojects. Each scene is a 20 second driving sequence and contains ~40 samples captured at 2Hz (twice per second). Each sample contains one snapshot from each sensor on the car, including the LiDAR. In addition, each sample contains a series of annotations as class-annotated bounding boxes.
 
 **Figure 2**  
-*Dataset schema of NuScenes dataset*
+*Dataset Schema of nuScenes Dataset*
 ![](Resources/DatasetSchema.png)
 
 
@@ -101,7 +101,7 @@ As illustrated in Figure 2, the nuScenes dataset is organized hierarchically wit
 
 We conducted comprehensive exploratory analysis to understand the data characteristics, as well as verifying the completeness and consistency of the data:
 
-The point cloud files were composed of 30,000 to 40,000 points positioned in a 3D coordinate space which represents the surroundings of the vehicle. In addition to encoding positional information, they also encode height (values ranged from -3 to 5m) and intensity information (a measure of the reflectivity of the contact material). 
+The point cloud files were composed of 30,000 to 40,000 points positioned in a 3D coordinate space which represents the surroundings of the vehicle. In addition to encoding coordinates, they also encode height (values ranged from -3 to 5m) and intensity information (a measure of the reflectivity of the contact material). 
 
 The per-class distribution of annotated objects was skewed, with ~50% of cars, 10% of trucks/buses, ~35% of pedestrians and ~5% of cyclists.
 
@@ -113,7 +113,7 @@ The dataset contained a wide variety of driving scenarios, including urban inter
 We visually inspected the data at the sample level, at the sensor level, and at the annotation level (Figure 3).
 
 **Figure 3**  
-*Sample visualization*
+*Sample Visualization*
 ![](Resources/TimestepVisualization.png)
 
 
@@ -122,7 +122,7 @@ These visualizations confirmed the dataset's richness and the feasibility of BEV
 ## 4. Data Preprocessing
 
 
-The preprocessing stage involved three major operations: converting point cloud data to 2D representation, converting annotations from 3D to 2D, and reducing the amount of classes from 23 to 4.
+The preprocessing stage involved four major operations: trimming the data, converting point cloud data to 2D representation, converting annotations from 3D to 2D, and reducing the amount of classes from 23 to 4.
 
 First, we trimmed the point clouds to within a 100m × 100m area around the vehicle using X-range [-50m, 50m] for forward/backward, Y-range [-50m, 50m] for left/right, and Z-range [-3m, 5m] for ground to elevated structures. This filtering reduced computational load by 50-70% while retaining all relevant objects for autonomous driving perception.
 
@@ -174,7 +174,7 @@ Finally we consolidated nuScenes' 23 categories into 4 classes: cars (Class 0), 
 As shown in Figure 4, the preprocessed images (center) show the point cloud data converted to BEV perspective and annotations correctly positioned around the ego vehicle.
 
 **Figure 4**  
-*Preprocessed Images with Annotations and corresponding camera images*
+*Preprocessed Images with Annotations and Corresponding Camera Images*
 ![](Resources/BEV.png)
 
 
@@ -245,7 +245,7 @@ We conducted training runs across both datasets with different configurations. T
 The results indicated a steady increase in performance across all metrics, with the best model (Run 3) achieving mAP@0.5 of 0.630, mAP@0.5:0.95 of 0.380, precision of 0.811, and recall of 0.416 (Figure 5).
 
 **Figure 5**  
-*Overall performance metrics across runs*
+*Overall Performance Metrics Across Runs*
 ![](Resources/Graphs/results_overall.png)
 
 
@@ -267,7 +267,7 @@ Detection performance varied significantly across object classes, correlating wi
 Cars (~50% of instances) were the best-performing class with mAP@0.5 of 0.792. Their large size and high point density provide clear BEV signatures (Figure 6). 
 
 **Figure 6**  
-*Car Detection Performance across Runs*
+*Car Detection Performance Across Runs*
 ![](Resources/Graphs/results_car.png)
 
 
@@ -275,7 +275,7 @@ Cars (~50% of instances) were the best-performing class with mAP@0.5 of 0.792. T
 Trucks/buses (~10% of instances) showed strong performance with mAP@0.5 of 0.750, aided by their large BEV footprint despite lower frequency (Figure 7).
 
 **Figure 7**  
-*Truck/Bus Detection Performance across Runs*
+*Truck/Bus Detection Performance Across Runs*
 ![](Resources/Graphs/results_truck_bus.png)
 
 
@@ -284,7 +284,7 @@ Pedestrians and cyclists proved more challenging due to their smaller LiDAR sign
 Pedestrians (~35% of instances) had a recall of 0.262, meaning only one in four were detected (Figure 8). 
 
 **Figure 8**  
-*Pedestrian Detection Performance across Runs*
+*Pedestrian Detection Performance Across Runs*
 
 ![](Resources/Graphs/results_pedestrian.png)
 
@@ -292,7 +292,7 @@ Cyclists (~5% of instances) were the most underrepresented class with the lowest
 
 
 **Figure 9**  
-*Cyclist detection performance across runs*
+*Cyclist Detection Performance Across Runs*
 ![](Resources/Graphs/results_cyclist.png)
 
 
@@ -305,7 +305,7 @@ Increasing dataset size produced negligible improvements in mAP@0.5 and recall f
 Increasing resolution from 1024 to 1280 improved mAP@0.5 for all classes, indicating that the model was able to make more predictions overlapping at least 50% with ground truth. Cyclist recall further improved from 0.10 to 0.12 (Figure 10).
 
 **Figure 10**  
-*Performance Comparison across Training Configurations*
+*Performance Comparison Across Training Configurations*
 ![](Resources/Graphs/results_comparison.png)
 
 
@@ -320,7 +320,7 @@ We observed that the model demonstrated strong detection of vehicles in open are
 
 
 **Figure 11**   
-*Visualizer showing Model Predictions overlaid on 3D point cloud sensor data*
+*Visualizer Showing Model Predictions Overlaid on 3D Point Cloud Sensor Data*
 
 ![](Resources/Visualizer.png)
 
@@ -373,9 +373,9 @@ We're getting to experience first-hand many technological advancements that were
 
 Caesar, H., Bankiti, V., Lang, A. H., Vora, S., Liong, V. E., Xu, Q., ... & Beijbom, O. (2020). nuScenes: A multimodal dataset for autonomous driving. In *Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition* (pp. 11621-11631).
 
-Lin, T. Y., Maire, M., Belongie, S., Hays, J., Perona, P., Ramanan, D., ... & Zitnick, C. L. (2014). Microsoft COCO: Common objects in context. In *European Conference on Computer Vision* (pp. 740-755). Springer.
-
 Geiger, A., Lenz, P., & Urtasun, R. (2012). Are we ready for autonomous driving? The KITTI vision benchmark suite. In *Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition* (pp. 3354-3361).
+
+Lin, T. Y., Maire, M., Belongie, S., Hays, J., Perona, P., Ramanan, D., ... & Zitnick, C. L. (2014). Microsoft COCO: Common objects in context. In *European Conference on Computer Vision* (pp. 740-755). Springer.
 
 Ouster, Inc. (n.d.-a). OS1: Mid-range high-resolution lidar sensor. https://ouster.com/products/hardware/os1-lidar-sensor
 
